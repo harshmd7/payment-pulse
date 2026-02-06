@@ -96,6 +96,7 @@ export default function Dashboard() {
         setCustomers(data);
         calculateStats(data);
         generateAlerts(data);
+        generateRecentActivities(data);
       }
     } catch (error) {
       console.error('Error loading customers:', error);
@@ -112,14 +113,22 @@ export default function Dashboard() {
       ? customerData.reduce((sum, c) => sum + Number(c.risk_score), 0) / totalCustomers
       : 0;
 
+    // Compute recovery rate as percentage of customers with no outstanding amount
+    const recoveredCustomers = customerData.filter(c => Number(c.outstanding_amount) <= 0).length;
+    const recoveryRate = totalCustomers > 0 ? (recoveredCustomers / totalCustomers) * 100 : 0;
+
+    // Compute average payment days weighted by outstanding amount so larger debts influence the average
+    const weightedDaysSum = customerData.reduce((sum, c) => sum + (Number(c.days_overdue || 0) * Number(c.outstanding_amount || 0)), 0);
+    const avgPaymentDays = totalOutstanding > 0 ? Math.round(weightedDaysSum / totalOutstanding) : 0;
+
     setStats(prev => ({
       ...prev,
       totalCustomers,
       highRisk,
       totalOutstanding,
       avgRiskScore,
-      recoveryRate: 78.5,
-      avgPaymentDays: 28,
+      recoveryRate: Number(recoveryRate.toFixed(1)),
+      avgPaymentDays,
     }));
   };
 
@@ -363,13 +372,110 @@ export default function Dashboard() {
   };
 
   const unreadCount = alerts.filter(a => a.unread).length;
+  const [recentActivities, setRecentActivities] = useState<Array<{
+    id: number;
+    action: string;
+    user: string;
+    time: string;
+    icon: React.ElementType;
+    color: string;
+  }>>([]);
 
-  const recentActivities = [
-    { id: 1, action: 'New customer uploaded', user: 'Alex Chen', time: '10 min ago', icon: Upload, color: COLORS.primary },
-    { id: 2, action: 'Risk score updated', user: 'System', time: '25 min ago', icon: AlertCircle, color: COLORS.warning },
-    { id: 3, action: 'Payment received', user: 'Customer #245', time: '1 hour ago', icon: TrendingUp, color: COLORS.success },
-    { id: 4, action: 'Report generated', user: 'Auto System', time: '2 hours ago', icon: BarChart3, color: COLORS.secondary },
-  ];
+  const timeAgo = (isoDate?: string) => {
+    if (!isoDate) return 'Unknown';
+    const d = new Date(isoDate).getTime();
+    const diff = Date.now() - d;
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return 'just now';
+    if (mins < 60) return `${mins} min${mins > 1 ? 's' : ''} ago`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs} hour${hrs > 1 ? 's' : ''} ago`;
+    const days = Math.floor(hrs / 24);
+    return `${days} day${days > 1 ? 's' : ''} ago`;
+  };
+
+  const generateRecentActivities = (customerData: Customer[]) => {
+    const activities: any[] = [];
+    let id = 1;
+
+    customerData.forEach((c) => {
+      const createdAt = c.created_at;
+      const updatedAt = c.updated_at || c.created_at;
+
+      if (Number(c.outstanding_amount) === 0) {
+        activities.push({
+          id: id++,
+          action: `Payment received: ${c.name}`,
+          user: 'System',
+          time: updatedAt,
+          icon: TrendingUp,
+          color: COLORS.success,
+        });
+        return;
+      }
+
+      if (c.days_overdue > 30) {
+        activities.push({
+          id: id++,
+          action: `Payment overdue: ${c.name} (${c.days_overdue} days)`,
+          user: 'System',
+          time: updatedAt,
+          icon: Clock,
+          color: COLORS.warning,
+        });
+        return;
+      }
+
+      if (c.risk_score >= 70) {
+        activities.push({
+          id: id++,
+          action: `Risk score high: ${c.name} (Risk: ${c.risk_score})`,
+          user: 'System',
+          time: updatedAt,
+          icon: AlertCircle,
+          color: COLORS.danger,
+        });
+        return;
+      }
+
+      // New customer if created within last 7 days
+      const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
+      if (Date.now() - new Date(createdAt).getTime() < sevenDaysMs) {
+        activities.push({
+          id: id++,
+          action: `New customer uploaded: ${c.name}`,
+          user: 'Uploader',
+          time: createdAt,
+          icon: Upload,
+          color: COLORS.primary,
+        });
+        return;
+      }
+
+      // Fallback: general updated activity
+      activities.push({
+        id: id++,
+        action: `Customer updated: ${c.name}`,
+        user: 'System',
+        time: updatedAt,
+        icon: BarChart3,
+        color: COLORS.secondary,
+      });
+    });
+
+    // Sort by time desc and limit to 6
+    activities.sort((a, b) => (new Date(b.time).getTime() - new Date(a.time).getTime()));
+    const mapped = activities.slice(0, 6).map((a) => ({
+      id: a.id,
+      action: a.action,
+      user: a.user,
+      time: timeAgo(a.time),
+      icon: a.icon,
+      color: a.color,
+    }));
+
+    setRecentActivities(mapped);
+  };
 
   return (
     <div
