@@ -27,6 +27,7 @@ import {
   Scroll,
   Castle,
   Diamond,
+  TrendingUp as TrendingUpIcon,
   Activity,
   PieChart,
   Target,
@@ -37,6 +38,7 @@ import {
   HelpCircle,
   Filter,
   Download,
+  MoreVertical,
   User,
   Building,
   Globe,
@@ -44,8 +46,6 @@ import {
   Sparkles,
   Eye,
   EyeOff,
-  Target as TargetIcon,
-  LineChart as LineChartIcon,
 } from 'lucide-react';
 import FileUpload from './FileUpload';
 import CustomerList from './CustomerList';
@@ -81,8 +81,6 @@ export default function Dashboard() {
     { id: 3, message: 'System update completed', time: '1 day ago', type: 'success', unread: false },
     { id: 4, message: 'Royal tier milestone reached', time: '2 days ago', type: 'info', unread: false },
   ]);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   
   const [stats, setStats] = useState({
     totalCustomers: 0,
@@ -187,7 +185,7 @@ export default function Dashboard() {
       className={`w-full flex items-center p-4 rounded-2xl transition-all duration-300 group ${
         activeTab === tab 
           ? 'bg-gradient-to-r from-[#1b4079] to-[#4d7c8a] text-white shadow-lg' 
-          : 'text-gray-600 hover:bg-white/10 hover:text-gray-800 border border-white/5'
+          : 'text-gray-600 hover:bg-white/10 hover:text-white border border-white/5'
       }`}
       style={{
         backdropFilter: 'blur(10px)',
@@ -196,33 +194,25 @@ export default function Dashboard() {
       <div className={`flex items-center justify-center w-12 h-12 rounded-xl mr-4 transition-all ${
         activeTab === tab 
           ? 'bg-white/20' 
-          : 'bg-gray-100 group-hover:bg-gray-200'
+          : 'bg-white/5 group-hover:bg-white/10'
       }`}>
         <Icon className={`w-6 h-6 ${
-          activeTab === tab ? 'text-white' : 'text-gray-500 group-hover:text-gray-700'
+          activeTab === tab ? 'text-white' : 'text-gray-400 group-hover:text-white'
         }`} />
       </div>
       
       {sidebarOpen && (
         <div className="flex-1 text-left">
           <div className="flex items-center justify-between">
-            <span className="font-semibold text-sm" style={{ 
-              color: activeTab === tab ? 'white' : COLORS.dark 
-            }}>
-              {label}
-            </span>
+            <span className="font-semibold text-sm">{label}</span>
             {badge && (
-              <span className="px-2 py-1 text-xs rounded-full bg-red-500/30 text-red-600">
+              <span className="px-2 py-1 text-xs rounded-full bg-red-500/30 text-red-200">
                 {badge}
               </span>
             )}
           </div>
           {description && (
-            <p className="text-xs mt-1" style={{ 
-              color: activeTab === tab ? 'rgba(255,255,255,0.8)' : COLORS.secondary 
-            }}>
-              {description}
-            </p>
+            <p className="text-xs text-gray-400 mt-1">{description}</p>
           )}
         </div>
       )}
@@ -257,13 +247,22 @@ export default function Dashboard() {
     iconBg?: string;
   }) => (
     <div 
-      className="rounded-2xl p-6 relative overflow-hidden group transition-all duration-300 hover:scale-[1.02] cursor-pointer"
+      className="rounded-2xl p-6 relative overflow-hidden group transition-all duration-300 hover:scale-[1.02]"
       style={{
         background: gradient || `linear-gradient(135deg, ${COLORS.primary}15, ${COLORS.secondary}15)`,
         border: `1px solid ${color}30`,
         boxShadow: `0 8px 32px ${color}15`,
       }}
     >
+      {/* Background pattern */}
+      <div 
+        className="absolute inset-0 opacity-5"
+        style={{
+          backgroundImage: `radial-gradient(circle at 20% 80%, ${color}40 2%, transparent 2.5%)`,
+          backgroundSize: '50px 50px',
+        }}
+      />
+      
       <div className="relative z-10">
         <div className="flex items-start justify-between mb-6">
           <div 
@@ -278,12 +277,12 @@ export default function Dashboard() {
           
           {trend && trendValue && (
             <div className={`flex items-center px-3 py-1.5 rounded-full ${
-              trend === 'up' ? 'bg-emerald-500/20 text-emerald-600' :
-              trend === 'down' ? 'bg-red-500/20 text-red-600' :
-              'bg-gray-500/20 text-gray-600'
+              trend === 'up' ? 'bg-emerald-500/20 text-emerald-400' :
+              trend === 'down' ? 'bg-red-500/20 text-red-400' :
+              'bg-gray-500/20 text-gray-400'
             }`}>
-              {trend === 'up' ? <TrendingUp className="w-3 h-3 mr-1" /> : 
-               trend === 'down' ? <TrendingUp className="w-3 h-3 mr-1 rotate-180" /> : null}
+              {trend === 'up' ? <TrendingUpIcon className="w-3 h-3 mr-1" /> : 
+               trend === 'down' ? <TrendingUpIcon className="w-3 h-3 mr-1 rotate-180" /> : null}
               <span className="text-xs font-semibold">{trendValue}</span>
             </div>
           )}
@@ -444,87 +443,81 @@ export default function Dashboard() {
             {/* Right Section */}
             <div className="flex items-center space-x-3">
               {/* Notifications */}
-              <div className="relative">
+              <div className="relative group">
                 <button 
                   className="p-3 rounded-xl relative transition-all hover:scale-105"
                   style={{ 
                     backgroundColor: `${COLORS.primary}15`,
                     border: `1px solid ${COLORS.primary}20`,
                   }}
-                  onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-                  onBlur={() => setTimeout(() => setIsNotificationsOpen(false), 200)}
                 >
                   <Bell className="w-5 h-5" style={{ color: COLORS.primary }} />
                   <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
                 </button>
                 
                 {/* Notifications Dropdown */}
-                {isNotificationsOpen && (
-                  <div 
-                    className="absolute right-0 mt-2 w-96 bg-white rounded-2xl shadow-2xl z-50"
-                    style={{ 
-                      border: `1px solid ${COLORS.primary}20`,
-                      backdropFilter: 'blur(20px)',
-                    }}
-                  >
-                    <div className="p-4 border-b" style={{ borderColor: `${COLORS.primary}20` }}>
-                      <div className="flex items-center justify-between">
-                        <h3 className="font-semibold" style={{ color: COLORS.primary }}>Notifications</h3>
-                        <span className="text-xs px-2 py-1 rounded-full" style={{ backgroundColor: `${COLORS.primary}15`, color: COLORS.primary }}>
-                          {notifications.filter(n => n.unread).length} new
-                        </span>
-                      </div>
-                    </div>
-                    
-                    <div className="max-h-96 overflow-y-auto">
-                      {notifications.map((note) => (
-                        <div 
-                          key={note.id}
-                          className="p-4 border-b hover:bg-gray-50/50 transition-colors cursor-pointer"
-                          style={{ borderColor: `${COLORS.primary}10` }}
-                          onClick={() => markNotificationAsRead(note.id)}
-                        >
-                          <div className="flex items-start space-x-3">
-                            <div 
-                              className={`p-2 rounded-lg ${note.unread ? 'opacity-100' : 'opacity-60'}`}
-                              style={{ 
-                                backgroundColor: note.type === 'warning' ? `${COLORS.warning}15` :
-                                              note.type === 'success' ? `${COLORS.success}15` : `${COLORS.primary}15`,
-                                border: `1px solid ${
-                                  note.type === 'warning' ? COLORS.warning + '30' :
-                                  note.type === 'success' ? COLORS.success + '30' : COLORS.primary + '30'
-                                }`,
-                              }}
-                            >
-                              {note.type === 'warning' ? <AlertTriangle className="w-4 h-4" style={{ color: COLORS.warning }} /> :
-                               note.type === 'success' ? <CheckCircle className="w-4 h-4" style={{ color: COLORS.success }} /> :
-                               <Bell className="w-4 h-4" style={{ color: COLORS.primary }} />}
-                            </div>
-                            <div className="flex-1">
-                              <p className="font-medium text-sm" style={{ color: COLORS.dark }}>{note.message}</p>
-                              <p className="text-xs mt-1" style={{ color: COLORS.secondary }}>{note.time}</p>
-                            </div>
-                            {note.unread && (
-                              <div className="w-2 h-2 rounded-full bg-blue-500 mt-1"></div>
-                            )}
-                          </div>
-                        </div>
-                      ))}
+                <div 
+                  className="absolute right-0 mt-2 w-96 bg-white rounded-2xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50"
+                  style={{ 
+                    border: `1px solid ${COLORS.primary}20`,
+                    backdropFilter: 'blur(20px)',
+                  }}
+                >
+                  <div className="p-4 border-b" style={{ borderColor: `${COLORS.primary}20` }}>
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-semibold" style={{ color: COLORS.primary }}>Notifications</h3>
+                      <span className="text-xs px-2 py-1 rounded-full" style={{ backgroundColor: `${COLORS.primary}15`, color: COLORS.primary }}>
+                        {notifications.filter(n => n.unread).length} new
+                      </span>
                     </div>
                   </div>
-                )}
+                  
+                  <div className="max-h-96 overflow-y-auto">
+                    {notifications.map((note) => (
+                      <div 
+                        key={note.id}
+                        className="p-4 border-b hover:bg-gray-50/50 transition-colors cursor-pointer"
+                        style={{ borderColor: `${COLORS.primary}10` }}
+                        onClick={() => markNotificationAsRead(note.id)}
+                      >
+                        <div className="flex items-start space-x-3">
+                          <div 
+                            className={`p-2 rounded-lg ${note.unread ? 'opacity-100' : 'opacity-60'}`}
+                            style={{ 
+                              backgroundColor: note.type === 'warning' ? `${COLORS.warning}15` :
+                                            note.type === 'success' ? `${COLORS.success}15` : `${COLORS.primary}15`,
+                              border: `1px solid ${
+                                note.type === 'warning' ? COLORS.warning + '30' :
+                                note.type === 'success' ? COLORS.success + '30' : COLORS.primary + '30'
+                              }`,
+                            }}
+                          >
+                            {note.type === 'warning' ? <AlertTriangle className="w-4 h-4" style={{ color: COLORS.warning }} /> :
+                             note.type === 'success' ? <CheckCircle className="w-4 h-4" style={{ color: COLORS.success }} /> :
+                             <Bell className="w-4 h-4" style={{ color: COLORS.primary }} />}
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-medium text-sm" style={{ color: COLORS.dark }}>{note.message}</p>
+                            <p className="text-xs mt-1" style={{ color: COLORS.secondary }}>{note.time}</p>
+                          </div>
+                          {note.unread && (
+                            <div className="w-2 h-2 rounded-full bg-blue-500 mt-1"></div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
 
               {/* User Profile */}
-              <div className="relative">
+              <div className="relative group">
                 <button 
                   className="flex items-center space-x-3 p-2 rounded-xl transition-all hover:scale-105"
                   style={{ 
                     backgroundColor: `${COLORS.primary}15`,
                     border: `1px solid ${COLORS.primary}20`,
                   }}
-                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  onBlur={() => setTimeout(() => setIsDropdownOpen(false), 200)}
                 >
                   <div 
                     className="w-9 h-9 rounded-lg flex items-center justify-center"
@@ -546,61 +539,60 @@ export default function Dashboard() {
                 </button>
                 
                 {/* Profile Dropdown */}
-                {isDropdownOpen && (
-                  <div 
-                    className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-2xl z-50"
-                    style={{ 
-                      border: `1px solid ${COLORS.primary}20`,
-                    }}
-                  >
-                    <div className="p-4 border-b" style={{ borderColor: `${COLORS.primary}20` }}>
-                      <div className="flex items-center space-x-3">
-                        <div 
-                          className="w-12 h-12 rounded-lg flex items-center justify-center"
-                          style={{ 
-                            background: `linear-gradient(135deg, ${COLORS.primary}, ${COLORS.secondary})`,
-                          }}
-                        >
-                          <span className="text-white font-semibold text-base">
-                            {user?.email?.charAt(0).toUpperCase() || 'A'}
-                          </span>
-                        </div>
-                        <div>
-                          <p className="font-semibold" style={{ color: COLORS.dark }}>
-                            {user?.email?.split('@')[0] || 'Admin User'}
-                          </p>
-                          <p className="text-xs" style={{ color: COLORS.secondary }}>{user?.email}</p>
-                        </div>
+                <div 
+                  className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50"
+                  style={{ 
+                    border: `1px solid ${COLORS.primary}20`,
+                    backdropFilter: 'blur(20px)',
+                  }}
+                >
+                  <div className="p-4 border-b" style={{ borderColor: `${COLORS.primary}20` }}>
+                    <div className="flex items-center space-x-3">
+                      <div 
+                        className="w-12 h-12 rounded-lg flex items-center justify-center"
+                        style={{ 
+                          background: `linear-gradient(135deg, ${COLORS.primary}, ${COLORS.secondary})`,
+                        }}
+                      >
+                        <span className="text-white font-semibold text-base">
+                          {user?.email?.charAt(0).toUpperCase() || 'A'}
+                        </span>
+                      </div>
+                      <div>
+                        <p className="font-semibold" style={{ color: COLORS.dark }}>
+                          {user?.email?.split('@')[0] || 'Admin User'}
+                        </p>
+                        <p className="text-xs" style={{ color: COLORS.secondary }}>{user?.email}</p>
                       </div>
                     </div>
-                    
-                    <div className="p-2">
-                      <button className="w-full text-left px-3 py-2.5 rounded-lg hover:bg-gray-50/50 transition-colors flex items-center space-x-3">
-                        <User className="w-4 h-4" style={{ color: COLORS.primary }} />
-                        <span className="text-sm" style={{ color: COLORS.dark }}>Profile</span>
-                      </button>
-                      <button className="w-full text-left px-3 py-2.5 rounded-lg hover:bg-gray-50/50 transition-colors flex items-center space-x-3">
-                        <Settings className="w-4 h-4" style={{ color: COLORS.primary }} />
-                        <span className="text-sm" style={{ color: COLORS.dark }}>Settings</span>
-                      </button>
-                      <button className="w-full text-left px-3 py-2.5 rounded-lg hover:bg-gray-50/50 transition-colors flex items-center space-x-3">
-                        <HelpCircle className="w-4 h-4" style={{ color: COLORS.primary }} />
-                        <span className="text-sm" style={{ color: COLORS.dark }}>Help & Support</span>
-                      </button>
-                    </div>
-                    
-                    <div className="p-2 border-t" style={{ borderColor: `${COLORS.primary}20` }}>
-                      <button
-                        onClick={handleSignOut}
-                        className="w-full text-left px-3 py-2.5 rounded-lg hover:bg-red-50/50 transition-colors flex items-center space-x-3"
-                        style={{ color: COLORS.danger }}
-                      >
-                        <LogOut className="w-4 h-4" />
-                        <span className="text-sm font-medium">Sign Out</span>
-                      </button>
-                    </div>
                   </div>
-                )}
+                  
+                  <div className="p-2">
+                    <button className="w-full text-left px-3 py-2.5 rounded-lg hover:bg-gray-50/50 transition-colors flex items-center space-x-3">
+                      <User className="w-4 h-4" style={{ color: COLORS.primary }} />
+                      <span className="text-sm" style={{ color: COLORS.dark }}>Profile</span>
+                    </button>
+                    <button className="w-full text-left px-3 py-2.5 rounded-lg hover:bg-gray-50/50 transition-colors flex items-center space-x-3">
+                      <Settings className="w-4 h-4" style={{ color: COLORS.primary }} />
+                      <span className="text-sm" style={{ color: COLORS.dark }}>Settings</span>
+                    </button>
+                    <button className="w-full text-left px-3 py-2.5 rounded-lg hover:bg-gray-50/50 transition-colors flex items-center space-x-3">
+                      <HelpCircle className="w-4 h-4" style={{ color: COLORS.primary }} />
+                      <span className="text-sm" style={{ color: COLORS.dark }}>Help & Support</span>
+                    </button>
+                  </div>
+                  
+                  <div className="p-2 border-t" style={{ borderColor: `${COLORS.primary}20` }}>
+                    <button
+                      onClick={handleSignOut}
+                      className="w-full text-left px-3 py-2.5 rounded-lg hover:bg-red-50/50 transition-colors flex items-center space-x-3"
+                      style={{ color: COLORS.danger }}
+                    >
+                      <LogOut className="w-4 h-4" />
+                      <span className="text-sm font-medium">Sign Out</span>
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -608,22 +600,19 @@ export default function Dashboard() {
       </nav>
 
       <div className="flex">
-        {/* Sidebar - Fixed and Non-scrollable */}
-        <aside 
-          className={`fixed lg:sticky lg:top-0 h-[calc(100vh-5rem)] z-40 transition-all duration-300 ${
-            sidebarOpen ? 'w-72 translate-x-0' : '-translate-x-full lg:translate-x-0 lg:w-20'
-          }`}
-          style={{ 
-            backgroundColor: 'white',
-            borderRight: `1px solid ${COLORS.primary}20`,
-            backdropFilter: 'blur(20px)',
-            top: '5rem',
-            overflow: 'hidden',
-          }}
-        >
+        {/* Sidebar */}
+        <aside className={`
+          fixed lg:sticky top-20 lg:top-0 h-[calc(100vh-5rem)] 
+          transition-all duration-300 z-40
+          ${sidebarOpen ? 'w-72 translate-x-0' : '-translate-x-full lg:translate-x-0 lg:w-20'}
+        `}>
           <div 
-            className="h-full flex flex-col p-6 overflow-y-auto"
-            style={{ maxHeight: 'calc(100vh - 5rem)' }}
+            className="h-full flex flex-col p-6 border-r"
+            style={{ 
+              backgroundColor: 'white',
+              borderColor: `${COLORS.primary}20`,
+              backdropFilter: 'blur(20px)',
+            }}
           >
             {/* Welcome Card */}
             {sidebarOpen && (
@@ -677,13 +666,41 @@ export default function Dashboard() {
                 description="Deep insights and reports"
               />
             </nav>
+
+            {/* Quick Stats */}
+            {sidebarOpen && (
+              <div 
+                className="mt-8 p-5 rounded-2xl"
+                style={{ 
+                  background: `linear-gradient(135deg, ${COLORS.accent2}10, ${COLORS.accent3}10)`,
+                  border: `1px solid ${COLORS.accent2}30`,
+                }}
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-sm font-semibold" style={{ color: COLORS.dark }}>Quick Stats</span>
+                  <Activity className="w-4 h-4" style={{ color: COLORS.primary }} />
+                </div>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs" style={{ color: COLORS.secondary }}>Today's Risk</span>
+                    <span className="text-sm font-semibold" style={{ color: stats.highRisk > 50 ? COLORS.danger : COLORS.success }}>
+                      {stats.highRisk}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs" style={{ color: COLORS.secondary }}>Recovery Rate</span>
+                    <span className="text-sm font-semibold" style={{ color: COLORS.success }}>
+                      {stats.recoveryRate}%
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </aside>
 
         {/* Main Content */}
-        <main className={`flex-1 p-6 transition-all duration-300 ${
-          sidebarOpen ? 'lg:ml-0' : 'lg:ml-20'
-        }`}>
+        <main className="flex-1 p-6">
           {/* Welcome Header */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold mb-2" style={{ color: COLORS.dark }}>
@@ -774,7 +791,7 @@ export default function Dashboard() {
                 <div className="p-4 rounded-xl" style={{ backgroundColor: 'white' }}>
                   <div className="flex items-center mb-2">
                     <div className="p-2 rounded-lg mr-3" style={{ backgroundColor: `${COLORS.success}15` }}>
-                      <TargetIcon className="w-4 h-4" style={{ color: COLORS.success }} />
+                      <Target className="w-4 h-4" style={{ color: COLORS.success }} />
                     </div>
                     <span className="text-sm font-semibold" style={{ color: COLORS.dark }}>Recovery Rate</span>
                   </div>
@@ -837,15 +854,11 @@ export default function Dashboard() {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id as any)}
-                    className={`flex items-center space-x-2 py-4 border-b-2 transition-all duration-300 relative ${
+                    className={`flex items-center space-x-2 py-4 border-b-2 transition-all duration-300 ${
                       activeTab === tab.id 
                         ? 'border-blue-600 text-blue-600' 
                         : 'border-transparent text-gray-500 hover:text-gray-700'
                     }`}
-                    style={{
-                      borderColor: activeTab === tab.id ? COLORS.primary : 'transparent',
-                      color: activeTab === tab.id ? COLORS.primary : COLORS.secondary,
-                    }}
                   >
                     <tab.icon className="w-4 h-4" />
                     <span className="font-medium">{tab.label}</span>
