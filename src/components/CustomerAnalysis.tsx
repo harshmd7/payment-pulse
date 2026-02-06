@@ -1,6 +1,26 @@
 import { useState, useEffect } from 'react';
 import { Customer, supabase } from '../lib/supabase';
-import { X, Brain, Loader, AlertCircle, CheckCircle, Phone, Mail, MessageCircle } from 'lucide-react';
+import { 
+  X, Brain, Loader, AlertCircle, CheckCircle, Phone, Mail, MessageCircle,
+  Crown, Gem, ShieldCheck, Trophy, Scroll, Castle, Diamond, Zap,
+  TrendingUp, Target, LineChart, Activity, BarChart3
+} from 'lucide-react';
+
+// Royal color palette
+const COLORS = {
+  primary: '#1b4079',    // Royal Blue
+  secondary: '#4d7c8a',  // Steel Blue
+  accent1: '#7f9c96',    // Sage Green
+  accent2: '#8fad88',    // Olive Green
+  accent3: '#cbdf90',    // Pale Green
+  gold: '#d4af37',       // Royal Gold
+  lightGold: '#f4e4a6',
+  dark: '#0a1931',
+  light: '#f8f9fa',
+  success: '#10b981',
+  warning: '#f59e0b',
+  danger: '#ef4444',
+};
 
 interface CustomerAnalysisProps {
   customer: Customer;
@@ -186,44 +206,127 @@ export default function CustomerAnalysis({ customer, onClose, inline = false }: 
 
   const wrapperClass = inline
     ? 'mt-4 w-full'
-    : 'fixed inset-0 bg-black/0 z-50 flex items-start justify-center p-4';
+    : 'fixed inset-0 bg-black/50 z-50 flex items-start justify-center p-4 backdrop-blur-sm';
 
   const modalClass = inline
-    ? 'bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-2xl border border-purple-500/20 w-full overflow-y-auto shadow-xl shadow-purple-500/10'
-    : 'bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-2xl border border-purple-500/20 max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl shadow-purple-500/10';
+    ? 'bg-gradient-to-br from-white to-gray-50 rounded-2xl border w-full overflow-y-auto shadow-2xl'
+    : 'bg-gradient-to-br from-white to-gray-50 rounded-2xl border max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl';
+
+  const getRiskColor = (score: number) => {
+    if (score >= 70) return COLORS.danger;
+    if (score >= 40) return COLORS.warning;
+    return COLORS.success;
+  };
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'Critical': return COLORS.danger;
+      case 'High': return COLORS.warning;
+      case 'Medium': return COLORS.secondary;
+      default: return COLORS.accent1;
+    }
+  };
 
   return (
-    <div className={wrapperClass}>
-      <div className={modalClass}>
-        <div className="sticky top-0 bg-gradient-to-r from-purple-900/40 via-slate-900/95 to-indigo-900/40 backdrop-blur-xl border-b border-purple-500/20 p-6 flex items-center justify-between">
+    <div className={wrapperClass} onClick={onClose}>
+      <div 
+        className={modalClass}
+        style={{ 
+          borderColor: `${COLORS.primary}30`,
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div 
+          className="sticky top-0 backdrop-blur-xl border-b p-6 flex items-center justify-between"
+          style={{ 
+            background: `linear-gradient(135deg, ${COLORS.primary}15, ${COLORS.secondary}15)`,
+            borderColor: `${COLORS.primary}20`,
+          }}
+        >
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-purple-500 via-violet-500 to-indigo-500 rounded-lg flex items-center justify-center shadow-lg shadow-purple-500/30">
+            <div 
+              className="w-10 h-10 rounded-lg flex items-center justify-center shadow-lg"
+              style={{ 
+                background: `linear-gradient(135deg, ${COLORS.primary}, ${COLORS.secondary})`,
+                boxShadow: `0 4px 20px ${COLORS.primary}30`,
+              }}
+            >
               <Brain className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-200 via-violet-200 to-indigo-200 bg-clip-text text-transparent">AI Analysis</h2>
-              <p className="text-slate-400 text-sm">{customer.name}</p>
+              <h2 className="text-2xl font-bold" style={{ color: COLORS.primary }}>
+                Royal AI Analysis
+              </h2>
+              <p className="text-sm" style={{ color: COLORS.secondary }}>{customer.name}</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-purple-300 transition-colors"
+            className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+            style={{ color: COLORS.primary }}
           >
             <X className="w-6 h-6" />
           </button>
         </div>
 
         <div className="p-6 space-y-6">
+          {/* Customer Summary Card */}
+          <div 
+            className="p-6 rounded-2xl border"
+            style={{ 
+              background: `linear-gradient(135deg, ${COLORS.primary}10, ${COLORS.secondary}10)`,
+              borderColor: `${COLORS.primary}20`,
+            }}
+          >
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="text-center">
+                <p className="text-sm" style={{ color: COLORS.secondary }}>Risk Score</p>
+                <p className="text-2xl font-bold" style={{ color: getRiskColor(customer.risk_score) }}>
+                  {customer.risk_score}
+                </p>
+              </div>
+              <div className="text-center">
+                <p className="text-sm" style={{ color: COLORS.secondary }}>Outstanding</p>
+                <p className="text-2xl font-bold" style={{ color: COLORS.dark }}>
+                  ${Number(customer.outstanding_amount).toLocaleString()}
+                </p>
+              </div>
+              <div className="text-center">
+                <p className="text-sm" style={{ color: COLORS.secondary }}>Days Overdue</p>
+                <p className="text-2xl font-bold" style={{ color: COLORS.dark }}>
+                  {customer.days_overdue}
+                </p>
+              </div>
+              <div className="text-center">
+                <p className="text-sm" style={{ color: COLORS.secondary }}>Status</p>
+                <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
+                  customer.risk_score >= 70 ? 'bg-red-100 text-red-800' :
+                  customer.risk_score >= 40 ? 'bg-yellow-100 text-yellow-800' :
+                  'bg-green-100 text-green-800'
+                }`}>
+                  {customer.risk_score >= 70 ? 'High Risk' : customer.risk_score >= 40 ? 'Medium Risk' : 'Low Risk'}
+                </span>
+              </div>
+            </div>
+          </div>
+
           {analyzing && (
             <div className="flex flex-col items-center justify-center py-12">
-              <Loader className="w-12 h-12 text-purple-400 animate-spin mb-4" />
-              <p className="text-white font-semibold">Analyzing customer data...</p>
-              <p className="text-slate-400 text-sm">Running AI models and risk assessment</p>
+              <Loader className="w-12 h-12 animate-spin mb-4" style={{ color: COLORS.primary }} />
+              <p className="font-semibold" style={{ color: COLORS.dark }}>Analyzing customer data...</p>
+              <p className="text-sm mt-1" style={{ color: COLORS.secondary }}>Running AI models and risk assessment</p>
             </div>
           )}
 
           {error && (
-            <div className="flex items-center space-x-2 text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg p-4">
+            <div 
+              className="flex items-center space-x-2 p-4 rounded-lg border"
+              style={{ 
+                backgroundColor: `${COLORS.danger}10`,
+                borderColor: `${COLORS.danger}20`,
+                color: COLORS.danger,
+              }}
+            >
               <AlertCircle className="w-5 h-5 flex-shrink-0" />
               <span>{error}</span>
             </div>
@@ -231,50 +334,79 @@ export default function CustomerAnalysis({ customer, onClose, inline = false }: 
 
           {analysis && !analyzing && (
             <div className="space-y-6">
-              <div className="bg-gradient-to-br from-purple-500/10 via-violet-500/10 to-indigo-500/10 border border-purple-500/30 rounded-xl p-6 shadow-lg shadow-purple-500/5">
+              {/* AI Insights Section */}
+              <div 
+                className="rounded-2xl border p-6"
+                style={{ 
+                  background: `linear-gradient(135deg, ${COLORS.primary}10, ${COLORS.secondary}10)`,
+                  borderColor: `${COLORS.primary}30`,
+                }}
+              >
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-xl font-bold bg-gradient-to-r from-purple-200 to-violet-200 bg-clip-text text-transparent">AI Insights</h3>
-                  <span className="px-3 py-1 bg-gradient-to-r from-purple-500/20 to-violet-500/20 text-purple-300 rounded-full text-sm font-semibold border border-purple-400/30">
+                  <h3 className="text-xl font-bold flex items-center gap-2" style={{ color: COLORS.primary }}>
+                    <Brain className="w-5 h-5" />
+                    Royal AI Insights
+                  </h3>
+                  <span 
+                    className="px-3 py-1 text-sm font-semibold rounded-full"
+                    style={{ 
+                      backgroundColor: `${COLORS.gold}20`,
+                      color: COLORS.gold,
+                      border: `1px solid ${COLORS.gold}30`,
+                    }}
+                  >
                     Confidence: {analysis.confidence_score}%
                   </span>
                 </div>
-                <p className="text-white mb-4 leading-relaxed">{analysis.ai_insights.summary}</p>
+                <p className="mb-4 leading-relaxed" style={{ color: COLORS.dark }}>
+                  {analysis.ai_insights.summary}
+                </p>
                 <div className="space-y-2">
                   {analysis.ai_insights.details.map((insight: string, index: number) => (
                     <div key={index} className="flex items-start space-x-2">
-                      <CheckCircle className="w-4 h-4 text-violet-400 mt-0.5 flex-shrink-0" />
-                      <p className="text-slate-300 text-sm">{insight}</p>
+                      <CheckCircle className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: COLORS.success }} />
+                      <p className="text-sm" style={{ color: COLORS.secondary }}>{insight}</p>
                     </div>
                   ))}
                 </div>
-                <div className="grid grid-cols-2 gap-4 mt-4 pt-4 border-t border-purple-500/20">
+                <div className="grid grid-cols-2 gap-4 mt-4 pt-4 border-t" style={{ borderColor: `${COLORS.primary}20` }}>
                   <div>
-                    <p className="text-xs text-purple-300/70 mb-1">Emotional State</p>
-                    <p className="text-white text-sm font-semibold">
+                    <p className="text-xs mb-1" style={{ color: COLORS.secondary }}>Emotional State</p>
+                    <p className="text-sm font-semibold" style={{ color: COLORS.dark }}>
                       {analysis.ai_insights.emotional_indicators}
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-purple-300/70 mb-1">Engagement Level</p>
-                    <p className="text-white text-sm font-semibold">
+                    <p className="text-xs mb-1" style={{ color: COLORS.secondary }}>Engagement Level</p>
+                    <p className="text-sm font-semibold" style={{ color: COLORS.dark }}>
                       {analysis.ai_insights.engagement_readiness}
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-xl border border-indigo-500/20 p-6 shadow-lg shadow-indigo-500/5">
-                <h3 className="text-xl font-bold bg-gradient-to-r from-indigo-200 to-purple-200 bg-clip-text text-transparent mb-4">Risk Assessment</h3>
+              {/* Risk Assessment Section */}
+              <div 
+                className="rounded-2xl border p-6"
+                style={{ 
+                  background: `linear-gradient(135deg, ${COLORS.accent1}10, ${COLORS.accent2}10)`,
+                  borderColor: `${COLORS.accent1}30`,
+                }}
+              >
+                <h3 className="text-xl font-bold flex items-center gap-2 mb-4" style={{ color: COLORS.dark }}>
+                  <ShieldCheck className="w-5 h-5" />
+                  Risk Assessment
+                </h3>
                 <div className="grid grid-cols-2 gap-4 mb-6">
-                  <div className="bg-gradient-to-br from-emerald-500/10 to-teal-500/10 rounded-lg p-4 border border-emerald-500/20">
-                    <p className="text-sm text-emerald-300/70 mb-1">Recovery Probability</p>
-                    <p className="text-2xl font-bold bg-gradient-to-r from-emerald-300 to-teal-300 bg-clip-text text-transparent">
+                  <div className="p-4 rounded-lg" style={{ backgroundColor: 'white', border: `1px solid ${COLORS.success}20` }}>
+                    <p className="text-sm mb-1" style={{ color: COLORS.secondary }}>Recovery Probability</p>
+                    <p className="text-2xl font-bold" style={{ color: COLORS.success }}>
                       {analysis.risk_assessment.probability_of_recovery}
                     </p>
                   </div>
-                  <div className="bg-gradient-to-br from-cyan-500/10 to-blue-500/10 rounded-lg p-4 border border-cyan-500/20">
-                    <p className="text-sm text-cyan-300/70 mb-1">Expected Timeline</p>
-                    <p className="text-2xl font-bold bg-gradient-to-r from-cyan-300 to-blue-300 bg-clip-text text-transparent">
+                  <div className="p-4 rounded-lg" style={{ backgroundColor: 'white', border: `1px solid ${COLORS.primary}20` }}>
+                    <p className="text-sm mb-1" style={{ color: COLORS.secondary }}>Expected Timeline</p>
+                    <p className="text-2xl font-bold" style={{ color: COLORS.primary }}>
                       {analysis.risk_assessment.expected_recovery_time}
                     </p>
                   </div>
@@ -283,70 +415,79 @@ export default function CustomerAnalysis({ customer, onClose, inline = false }: 
                   {analysis.risk_assessment.factors.map((factor: any, index: number) => (
                     <div key={index} className="space-y-1">
                       <div className="flex items-center justify-between text-sm">
-                        <span className="text-white">{factor.factor}</span>
-                        <span className="text-slate-400">{factor.score}/100</span>
+                        <span style={{ color: COLORS.dark }}>{factor.factor}</span>
+                        <span style={{ color: COLORS.secondary }}>{factor.score}/100</span>
                       </div>
-                      <div className="w-full bg-slate-900 rounded-full h-2.5 overflow-hidden">
+                      <div className="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden">
                         <div
-                          className={`h-2.5 rounded-full ${
-                            factor.score >= 70
-                              ? 'bg-gradient-to-r from-red-500 to-rose-500'
-                              : factor.score >= 40
-                              ? 'bg-gradient-to-r from-amber-400 to-orange-400'
-                              : 'bg-gradient-to-r from-emerald-400 to-teal-400'
-                          }`}
-                          style={{ width: `${factor.score}%` }}
+                          className="h-2.5 rounded-full"
+                          style={{ 
+                            width: `${factor.score}%`,
+                            backgroundColor: getRiskColor(factor.score)
+                          }}
                         />
                       </div>
+                      <p className="text-xs" style={{ color: COLORS.secondary }}>
+                        Impact: <span className="font-semibold">{factor.impact}</span>
+                      </p>
                     </div>
                   ))}
                 </div>
               </div>
 
-              <div className="bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-xl border border-violet-500/20 p-6 shadow-lg shadow-violet-500/5">
-                <h3 className="text-xl font-bold bg-gradient-to-r from-violet-200 to-fuchsia-200 bg-clip-text text-transparent mb-4">Recommended Actions</h3>
+              {/* Recommended Actions Section */}
+              <div 
+                className="rounded-2xl border p-6"
+                style={{ 
+                  background: `linear-gradient(135deg, ${COLORS.gold}10, ${COLORS.lightGold}10)`,
+                  borderColor: `${COLORS.gold}30`,
+                }}
+              >
+                <h3 className="text-xl font-bold flex items-center gap-2 mb-4" style={{ color: COLORS.dark }}>
+                  <Target className="w-5 h-5" />
+                  Recommended Royal Actions
+                </h3>
                 <div className="space-y-4">
                   {analysis.recommended_actions.map((action: any, index: number) => (
                     <div
                       key={index}
-                      className="bg-gradient-to-br from-slate-900/50 to-slate-800/50 rounded-lg p-4 border border-slate-700/50 hover:border-purple-500/30 transition-all"
+                      className="p-4 rounded-lg border hover:border-gray-300 transition-all bg-white"
                     >
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex items-center space-x-2">
                           {action.channel === 'Phone Call' || action.channel === 'Phone' ? (
-                            <Phone className="w-5 h-5 text-cyan-400" />
+                            <Phone className="w-5 h-5" style={{ color: COLORS.primary }} />
                           ) : action.channel === 'Email' || action.channel === 'Follow-up Email' ? (
-                            <Mail className="w-5 h-5 text-violet-400" />
+                            <Mail className="w-5 h-5" style={{ color: COLORS.secondary }} />
                           ) : (
-                            <MessageCircle className="w-5 h-5 text-emerald-400" />
+                            <MessageCircle className="w-5 h-5" style={{ color: COLORS.accent1 }} />
                           )}
-                          <h4 className="text-white font-semibold">{action.action}</h4>
+                          <h4 className="font-semibold" style={{ color: COLORS.dark }}>{action.action}</h4>
                         </div>
                         <span
-                          className={`px-2 py-1 rounded text-xs font-semibold ${
-                            action.priority === 'Critical'
-                              ? 'bg-gradient-to-r from-red-500/20 to-rose-500/20 text-red-300 border border-red-500/30'
-                              : action.priority === 'High'
-                              ? 'bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-300 border border-amber-500/30'
-                              : 'bg-gradient-to-r from-indigo-500/20 to-purple-500/20 text-indigo-300 border border-indigo-500/30'
-                          }`}
+                          className="px-2 py-1 rounded text-xs font-semibold"
+                          style={{ 
+                            backgroundColor: `${getPriorityColor(action.priority)}20`,
+                            color: getPriorityColor(action.priority),
+                            border: `1px solid ${getPriorityColor(action.priority)}30`,
+                          }}
                         >
                           {action.priority}
                         </span>
                       </div>
                       <div className="grid grid-cols-2 gap-3 mb-3">
                         <div>
-                          <p className="text-xs text-purple-300/70">Channel</p>
-                          <p className="text-sm text-white">{action.channel}</p>
+                          <p className="text-xs" style={{ color: COLORS.secondary }}>Channel</p>
+                          <p className="text-sm" style={{ color: COLORS.dark }}>{action.channel}</p>
                         </div>
                         <div>
-                          <p className="text-xs text-purple-300/70">Timing</p>
-                          <p className="text-sm text-white">{action.timing}</p>
+                          <p className="text-xs" style={{ color: COLORS.secondary }}>Timing</p>
+                          <p className="text-sm" style={{ color: COLORS.dark }}>{action.timing}</p>
                         </div>
                       </div>
-                      <div className="bg-slate-800/50 rounded p-3 border border-purple-500/10">
-                        <p className="text-xs text-purple-300/70 mb-1">Suggested Approach:</p>
-                        <p className="text-sm text-slate-300">{action.script}</p>
+                      <div className="p-3 rounded border" style={{ borderColor: `${COLORS.primary}10`, backgroundColor: `${COLORS.primary}5` }}>
+                        <p className="text-xs mb-1" style={{ color: COLORS.secondary }}>Suggested Approach:</p>
+                        <p className="text-sm" style={{ color: COLORS.dark }}>{action.script}</p>
                       </div>
                     </div>
                   ))}
@@ -356,12 +497,23 @@ export default function CustomerAnalysis({ customer, onClose, inline = false }: 
           )}
         </div>
 
-        <div className="sticky bottom-0 bg-gradient-to-r from-purple-900/40 via-slate-900/95 to-indigo-900/40 backdrop-blur-xl border-t border-purple-500/20 p-6">
+        <div 
+          className="sticky bottom-0 backdrop-blur-xl border-t p-6"
+          style={{ 
+            background: `linear-gradient(135deg, ${COLORS.primary}15, ${COLORS.secondary}15)`,
+            borderColor: `${COLORS.primary}20`,
+          }}
+        >
           <button
             onClick={onClose}
-            className="w-full py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-lg font-semibold transition-all transform hover:scale-[1.02] shadow-lg shadow-purple-500/20"
+            className="w-full py-3 rounded-lg font-semibold transition-all transform hover:scale-[1.02] shadow-lg"
+            style={{ 
+              background: `linear-gradient(135deg, ${COLORS.primary}, ${COLORS.secondary})`,
+              color: 'white',
+              boxShadow: `0 4px 20px ${COLORS.primary}30`,
+            }}
           >
-            Close Analysis
+            Close Royal Analysis
           </button>
         </div>
       </div>
