@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react';
 import { Customer, supabase } from '../lib/supabase';
 import {
   X, Brain, Loader, AlertCircle, CheckCircle, Phone, Mail, MessageCircle,
-  TrendingUp, Target, LineChart, Activity, BarChart3, Sparkles, ShieldCheck, Trophy
+  Activity, Sparkles, ShieldCheck, Trophy
 } from 'lucide-react';
+import { calculateAdvancedRiskScore, getRiskScoreExplanation, getRiskCategory } from '../utils/riskScoreCalculator';
 
 const COLORS = {
   primary: '#1b4079',
@@ -29,6 +30,10 @@ export default function CustomerAnalysis({ customer, onClose, inline = false }: 
   const [analysis, setAnalysis] = useState<any>(null);
   const [error, setError] = useState('');
 
+  const displayScore = calculateAdvancedRiskScore({ daysOverdue: customer.days_overdue, outstandingAmount: Number(customer.outstanding_amount), isFirstDefault: true });
+
+  const currentScore = analysis?.risk_assessment?.overall_score ?? displayScore;
+
   useEffect(() => {
     performAnalysis();
   }, []);
@@ -43,6 +48,16 @@ export default function CustomerAnalysis({ customer, onClose, inline = false }: 
       const aiInsights = generateAIInsights(customer);
       const riskAssessment = generateRiskAssessment(customer);
       const recommendedActions = generateRecommendedActions(customer);
+      
+      // Calculate confidence score based on data completeness and days overdue severity
+      const advancedScore = calculateAdvancedRiskScore({
+        daysOverdue: customer.days_overdue,
+        outstandingAmount: Number(customer.outstanding_amount),
+        isFirstDefault: true,
+      });
+      
+      // Confidence: Higher for extreme scores (very clear), lower for moderate (more uncertain)
+      const confidenceScore = Math.abs(advancedScore - 50) >= 20 ? 92 : 85;
 
       const analysisData = {
         user_id: (await supabase.auth.getUser()).data.user?.id,
@@ -51,7 +66,7 @@ export default function CustomerAnalysis({ customer, onClose, inline = false }: 
         ai_insights: aiInsights,
         risk_assessment: riskAssessment,
         recommended_actions: recommendedActions,
-        confidence_score: 85 + Math.floor(Math.random() * 10),
+        confidence_score: confidenceScore,
       };
 
       const { data, error: insertError } = await supabase
@@ -71,129 +86,237 @@ export default function CustomerAnalysis({ customer, onClose, inline = false }: 
   };
 
   const generateAIInsights = (customer: Customer) => {
+    // Use the advanced risk score calculator
+    const advancedScore = calculateAdvancedRiskScore({
+      daysOverdue: customer.days_overdue,
+      outstandingAmount: Number(customer.outstanding_amount),
+      isFirstDefault: true, // We don't have history in this view
+    });
+
+    const riskCategory = getRiskCategory(advancedScore);
     const insights: string[] = [];
 
-    if (customer.risk_score >= 70) {
-      insights.push('Customer shows HIGH risk indicators with significant payment delays');
-      insights.push('Immediate intervention required to prevent further delinquency');
-      insights.push('Consider offering structured payment plan to facilitate recovery');
-    } else if (customer.risk_score >= 40) {
-      insights.push('Customer demonstrates MODERATE risk with some payment inconsistencies');
-      insights.push('Proactive engagement recommended to prevent escalation');
-      insights.push('May respond well to reminder communications and flexible terms');
+    // Primary insight based on days overdue
+    if (customer.days_overdue > 90) {
+      insights.push(`Critical: Payment is ${customer.days_overdue} days overdue (3+ months)`);
+      insights.push('This indicates serious financial difficulty or willful non-payment');
+      insights.push('High probability of needing legal intervention if unresolved');
+    } else if (customer.days_overdue > 60) {
+      insights.push(`Severe: Payment is ${customer.days_overdue} days overdue (2 months)`);
+      insights.push('Customer has clearly abandoned payment obligations');
+      insights.push('Immediate escalation and structured recovery plan needed');
+    } else if (customer.days_overdue > 30) {
+      insights.push(`Serious: Payment is ${customer.days_overdue} days overdue (1+ month)`);
+      insights.push('Payment pattern shows clear default, not mere delays');
+      insights.push('Personalized agent contact required immediately');
+    } else if (customer.days_overdue > 7) {
+      insights.push(`Late: Payment is ${customer.days_overdue} days overdue`);
+      insights.push('Timely intervention can prevent further escalation');
+      insights.push('Friendly reminder may be sufficient');
+    } else if (customer.days_overdue > 0) {
+      insights.push(`Minor delay: Payment is ${customer.days_overdue} days overdue`);
+      insights.push('Could be processing delay, likely to resolve on its own');
+      insights.push('Automated notification should suffice');
     } else {
-      insights.push('Customer shows LOW risk profile with manageable debt levels');
-      insights.push('Automated reminders likely sufficient for timely resolution');
-      insights.push('Good candidate for self-service payment options');
+      insights.push('✓ Payment is on-time');
+      insights.push('No immediate action required');
+      insights.push('Customer maintains good standing');
     }
 
-    if (customer.days_overdue > 60) {
-      insights.push(`Payment is ${customer.days_overdue} days overdue - urgency level HIGH`);
-    }
-
-    if (Number(customer.outstanding_amount) > 5000) {
-      insights.push('High-value account - prioritize for personalized agent contact');
+    // Secondary insight based on outstanding amount
+    if (Number(customer.outstanding_amount) > 50000) {
+      insights.push(`High-value account: ₹${Number(customer.outstanding_amount).toLocaleString()}`);
+      insights.push('Deserves priority handling and executive attention');
+    } else if (Number(customer.outstanding_amount) > 10000) {
+      insights.push(`Significant outstanding: ₹${Number(customer.outstanding_amount).toLocaleString()}`);
+      insights.push('Requires dedicated follow-up to prevent write-off');
     }
 
     return {
-      summary: insights[0],
+      summary: `${riskCategory.label}: ${riskCategory.description}`,
       details: insights,
-      emotional_indicators: customer.risk_score >= 70 ? 'High stress, potential financial hardship' : 'Moderate willingness to engage',
-      engagement_readiness: customer.risk_score < 40 ? 'High' : customer.risk_score < 70 ? 'Moderate' : 'Low',
+      emotional_indicators: 
+        advancedScore >= 70 
+          ? 'Likely financial hardship or intentional avoidance' 
+          : advancedScore >= 40 
+          ? 'May be temporary cash flow issues - responsive to communication'
+          : 'Good financial standing - reliable payer',
+      engagement_readiness: 
+        advancedScore >= 70 
+          ? 'Low - may require legal approach' 
+          : advancedScore >= 40 
+          ? 'Moderate - responsive to structured offers'
+          : 'High - likely self-resolving',
     };
   };
 
   const generateRiskAssessment = (customer: Customer) => {
+    // Calculate advanced risk score with breakdown
+    const advancedScore = calculateAdvancedRiskScore({
+      daysOverdue: customer.days_overdue,
+      outstandingAmount: Number(customer.outstanding_amount),
+      isFirstDefault: true,
+    });
+
+    const riskCategory = getRiskCategory(advancedScore);
+
+    // Calculate individual component scores for detailed breakdown
+    const daysScore = Math.min(70, Math.max(0, 
+      customer.days_overdue <= 0 ? 0 :
+      customer.days_overdue <= 7 ? 10 :
+      customer.days_overdue <= 30 ? 20 + (customer.days_overdue - 7) * 0.3 :
+      customer.days_overdue <= 60 ? 35 + (customer.days_overdue - 30) * 0.6 :
+      customer.days_overdue <= 90 ? 55 + (customer.days_overdue - 60) * 0.5 :
+      70
+    ));
+
+    const amountScore = Number(customer.outstanding_amount) < 1000 ? 10 :
+      Number(customer.outstanding_amount) < 5000 ? 25 :
+      Number(customer.outstanding_amount) < 10000 ? 40 :
+      Number(customer.outstanding_amount) < 50000 ? 65 : 90;
+
+    const recoveryProbability = 
+      advancedScore >= 70 ? '35-50%' :
+      advancedScore >= 40 ? '60-75%' :
+      '85-95%';
+
+    const recoveryTime = 
+      advancedScore >= 70 ? '90-180+ days' :
+      advancedScore >= 40 ? '30-60 days' :
+      '7-30 days';
+
     return {
-      overall_score: customer.risk_score,
+      overall_score: advancedScore,
+      risk_category: riskCategory.category,
       factors: [
         {
-          factor: 'Payment History',
-          score: customer.days_overdue > 60 ? 85 : customer.days_overdue > 30 ? 60 : 30,
-          impact: 'High',
+          factor: '📅 Days Overdue Impact',
+          score: Math.round(daysScore),
+          weight: '40%',
+          impact: 'Critical',
+          description: `${customer.days_overdue} days overdue - ${customer.days_overdue <= 0 ? 'On time' : customer.days_overdue <= 7 ? 'Minor delay' : customer.days_overdue <= 30 ? 'Serious default' : customer.days_overdue <= 60 ? 'Very serious' : 'Critical default'}`,
         },
         {
-          factor: 'Outstanding Amount',
-          score: Number(customer.outstanding_amount) > 5000 ? 75 : Number(customer.outstanding_amount) > 1000 ? 50 : 25,
+          factor: '💰 Outstanding Amount Severity',
+          score: Math.round(amountScore),
+          weight: '30%',
           impact: 'High',
+          description: `₹${Number(customer.outstanding_amount).toLocaleString()} outstanding - ${Number(customer.outstanding_amount) < 5000 ? 'Manageable' : Number(customer.outstanding_amount) < 20000 ? 'Significant' : 'Large burden'}`,
         },
         {
-          factor: 'Communication Response',
-          score: 45 + Math.floor(Math.random() * 30),
+          factor: '📊 Payment Behavior Pattern',
+          score: 15, // First-time default assumption
+          weight: '20%',
           impact: 'Medium',
+          description: 'First occurrence - Benefit of doubt given',
         },
         {
-          factor: 'Financial Stability',
-          score: customer.risk_score >= 70 ? 80 : customer.risk_score >= 40 ? 55 : 30,
-          impact: 'High',
+          factor: '⏱️ Payment Recency',
+          score: Math.round(Math.min(90, customer.days_overdue * 0.75)),
+          weight: '10%',
+          impact: 'Medium',
+          description: 'Time since last payment not available',
         },
       ],
-      probability_of_recovery: customer.risk_score >= 70 ? '45-60%' : customer.risk_score >= 40 ? '65-80%' : '85-95%',
-      expected_recovery_time: customer.risk_score >= 70 ? '60-90 days' : customer.risk_score >= 40 ? '30-60 days' : '15-30 days',
+      probability_of_recovery: recoveryProbability,
+      expected_recovery_time: recoveryTime,
+      explanation: getRiskScoreExplanation(advancedScore, {
+        daysOverdue: customer.days_overdue,
+        outstandingAmount: Number(customer.outstanding_amount),
+        isFirstDefault: true,
+      }),
     };
   };
 
   const generateRecommendedActions = (customer: Customer) => {
+    // Use advanced score to determine actions
+    const advancedScore = calculateAdvancedRiskScore({
+      daysOverdue: customer.days_overdue,
+      outstandingAmount: Number(customer.outstanding_amount),
+      isFirstDefault: true,
+    });
+
     const actions = [];
 
-    if (customer.risk_score >= 70) {
+    if (advancedScore >= 70) {
       actions.push({
-        action: 'Immediate Agent Contact',
+        action: '🚨 CRITICAL: Phone Call from Collections',
         priority: 'Critical',
         channel: 'Phone Call',
         timing: 'Within 24 hours',
-        script: 'Empathetic approach focusing on payment plan options and hardship assessment',
+        script: 'Senior collections agent - Discuss reasons for delay, offer structured payment plan or hardship relief. Be prepared to escalate to legal if no resolution.',
       });
       actions.push({
-        action: 'Offer Payment Plan',
+        action: 'Formal Demand Letter',
+        priority: 'Critical',
+        channel: 'Email + Registered Mail',
+        timing: 'Within 48 hours if phone fails',
+        script: 'Legal notice of default with 10-day cure period before collections/legal action',
+      });
+      actions.push({
+        action: 'Payment Plan or Settlement',
         priority: 'High',
-        channel: 'Follow-up Email',
+        channel: 'Follow-up Call/Email',
         timing: 'After initial contact',
-        script: 'Present flexible 3-6 month payment plan with reduced interest',
+        script: 'Offer 3-6 month payment plan with possible interest waiver, or lump-sum settlement discount',
       });
       actions.push({
-        action: 'Escalation Review',
-        priority: 'Medium',
+        action: 'Collections Agency Referral Planning',
+        priority: 'High',
         channel: 'Internal',
-        timing: 'If no response in 7 days',
-        script: 'Prepare for potential collections agency referral',
+        timing: 'If no resolution in 14 days',
+        script: 'Prepare account for third-party collections and potential credit reporting',
       });
-    } else if (customer.risk_score >= 40) {
+    } else if (advancedScore >= 40) {
       actions.push({
-        action: 'Personalized Email Reminder',
+        action: '⚠️ Engage - Personalized Call',
+        priority: 'High',
+        channel: 'Phone Call',
+        timing: 'Within 3 days',
+        script: 'Account manager - "Hi, I see your payment of ₹X is {{days}} days overdue. Everything okay? How can we help you get this resolved?"',
+      });
+      actions.push({
+        action: 'Email: Friendly Payment Reminder',
         priority: 'High',
         channel: 'Email',
-        timing: 'Within 3 days',
-        script: 'Friendly reminder with payment options and contact information',
+        timing: 'Immediately',
+        script: 'Professional reminder with payment link, payment plan options, and direct contact number for questions',
       });
       actions.push({
         action: 'SMS Notification',
         priority: 'Medium',
         channel: 'SMS',
-        timing: 'Day 5 if no response',
-        script: 'Brief payment reminder with direct payment link',
+        timing: 'Day 3 if no response',
+        script: `Quick reminder: Your ₹${Number(customer.outstanding_amount).toLocaleString()} payment is due. Click here to pay now: [link]`,
       });
       actions.push({
-        action: 'Agent Follow-up',
+        action: 'Flexible Payment Terms',
         priority: 'Medium',
-        channel: 'Phone',
-        timing: 'Day 10 if unresolved',
-        script: 'Check-in call to discuss payment obstacles and solutions',
+        channel: 'Email/Call',
+        timing: 'Day 5 if unresolved',
+        script: 'Offer 2-3 month payment plan with no interest to facilitate faster resolution',
       });
     } else {
       actions.push({
-        action: 'Automated Email Reminder',
+        action: '📧 Automated Courtesy Reminder',
         priority: 'Low',
         channel: 'Email',
-        timing: 'Within 7 days',
-        script: 'Standard payment reminder with self-service portal link',
+        timing: 'Within 5 days',
+        script: 'Standard payment reminder: "Hi {{name}}, just wanted to remind you about your payment of ₹X due on {{date}}. Payment options: [link]"',
       });
       actions.push({
-        action: 'Self-Service Portal',
+        action: 'Self-Service Portal Access',
         priority: 'Low',
-        channel: 'Online',
+        channel: 'Email',
         timing: 'Immediate',
-        script: 'Provide easy access to online payment and account management',
+        script: 'Provide easy online payment link with multiple payment options (card, bank transfer, UPI, etc.)',
+      });
+      actions.push({
+        action: 'No Further Action Required',
+        priority: 'Low',
+        channel: 'System',
+        timing: 'Ongoing',
+        script: 'Monitor for on-time payment. If missed, escalate to moderate risk actions.',
       });
     }
 
@@ -209,9 +332,7 @@ export default function CustomerAnalysis({ customer, onClose, inline = false }: 
     : 'bg-gradient-to-br from-white to-gray-50 rounded-2xl border max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl';
 
   const getRiskColor = (score: number) => {
-    if (score >= 70) return COLORS.danger;
-    if (score >= 40) return COLORS.warning;
-    return COLORS.success;
+    return getRiskCategory(Math.round(score)).color;
   };
 
   const getPriorityColor = (priority: string) => {
@@ -279,9 +400,14 @@ export default function CustomerAnalysis({ customer, onClose, inline = false }: 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="text-center p-3 rounded-lg" style={{ backgroundColor: 'white' }}>
                 <p className="text-sm mb-1" style={{ color: COLORS.secondary }}>Risk Score</p>
-                <p className="text-3xl font-bold" style={{ color: getRiskColor(customer.risk_score) }}>
-                  {customer.risk_score}
+                <p className="text-3xl font-bold" style={{ color: getRiskColor(currentScore) }}>
+                  {currentScore}
                 </p>
+                {(currentScore !== customer.risk_score) && (
+                  <p className="text-xs mt-1" style={{ color: COLORS.accent2 }}>
+                    (Calculated: {customer.risk_score} → {Math.round(currentScore)})
+                  </p>
+                )}
               </div>
               <div className="text-center p-3 rounded-lg" style={{ backgroundColor: 'white' }}>
                 <p className="text-sm mb-1" style={{ color: COLORS.secondary }}>Outstanding</p>
@@ -300,15 +426,12 @@ export default function CustomerAnalysis({ customer, onClose, inline = false }: 
                 <span
                   className="inline-block px-3 py-1 rounded-full text-xs font-semibold"
                   style={{
-                    backgroundColor: customer.risk_score >= 70 ? `${COLORS.danger}20` :
-                                   customer.risk_score >= 40 ? `${COLORS.warning}20` : `${COLORS.success}20`,
-                    color: customer.risk_score >= 70 ? COLORS.danger :
-                          customer.risk_score >= 40 ? COLORS.warning : COLORS.success,
-                    border: `1px solid ${customer.risk_score >= 70 ? COLORS.danger :
-                                       customer.risk_score >= 40 ? COLORS.warning : COLORS.success}30`
+                    backgroundColor: `${getRiskColor(Math.round(currentScore))}20`,
+                    color: getRiskColor(Math.round(currentScore)),
+                    border: `1px solid ${getRiskColor(Math.round(currentScore))}30`
                   }}
                 >
-                  {customer.risk_score >= 70 ? 'High Risk' : customer.risk_score >= 40 ? 'Medium Risk' : 'Low Risk'}
+                  {getRiskCategory(Math.round(currentScore)).label}
                 </span>
               </div>
             </div>
@@ -415,25 +538,33 @@ export default function CustomerAnalysis({ customer, onClose, inline = false }: 
                     </p>
                   </div>
                 </div>
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {analysis.risk_assessment.factors.map((factor: any, index: number) => (
-                    <div key={index} className="space-y-1">
-                      <div className="flex items-center justify-between text-sm">
-                        <span style={{ color: COLORS.dark }}>{factor.factor}</span>
-                        <span style={{ color: COLORS.secondary }}>{factor.score}/100</span>
+                    <div key={index} className="space-y-2 p-4 rounded-xl" style={{ backgroundColor: 'white', border: `1px solid ${COLORS.secondary}10` }}>
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold" style={{ color: COLORS.dark }}>{factor.factor}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm px-2 py-1 rounded" style={{ backgroundColor: `${COLORS.secondary}10`, color: COLORS.secondary }}>
+                            {factor.weight}
+                          </span>
+                          <span className="text-xl font-bold" style={{ color: getRiskColor(factor.score) }}>
+                            {factor.score}
+                          </span>
+                        </div>
                       </div>
-                      <div className="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden">
+                      <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
                         <div
-                          className="h-2.5 rounded-full transition-all duration-500"
+                          className="h-2 rounded-full transition-all duration-500"
                           style={{
-                            width: `${factor.score}%`,
+                            width: `${Math.min(100, factor.score)}%`,
                             backgroundColor: getRiskColor(factor.score)
                           }}
                         />
                       </div>
                       <p className="text-xs" style={{ color: COLORS.secondary }}>
-                        Impact: <span className="font-semibold">{factor.impact}</span>
+                        {factor.description}
                       </p>
+                      <p className="text-xs font-semibold">Impact: <span style={{ color: COLORS.danger }}>{factor.impact}</span></p>
                     </div>
                   ))}
                 </div>

@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import CustomerAnalysis from './CustomerAnalysis';
 import { generateCustomerPDF } from '../utils/pdfGenerator';
+import { getRiskCategory, calculateAdvancedRiskScore } from '../utils/riskScoreCalculator';
 
 const COLORS = {
   primary: '#1b4079',
@@ -57,27 +58,35 @@ export default function CustomerList({ customers, loading, onRefresh }: Customer
   const [deleting, setDeleting] = useState(false);
   const [updating, setUpdating] = useState(false);
 
-  const filteredCustomers = customers.filter((customer) => {
-    const matchesSearch =
-      customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      customer.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      customer.phone?.includes(searchTerm);
+  type CustomerWithScore = Customer & { calculatedScore: number };
 
-    const matchesFilter = filterStatus === 'all' || customer.status === filterStatus;
+  const filteredCustomers = (customers as Customer[])
+    .map((c) => ({
+      ...c,
+      calculatedScore: calculateAdvancedRiskScore({ daysOverdue: c.days_overdue, outstandingAmount: Number(c.outstanding_amount), isFirstDefault: true }),
+    }) as CustomerWithScore)
+    .filter((customer) => {
+      const matchesSearch =
+        customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        customer.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        customer.phone?.includes(searchTerm);
 
-    return matchesSearch && matchesFilter;
-  });
+      const matchesFilter = filterStatus === 'all' || customer.status === filterStatus;
+
+      return matchesSearch && matchesFilter;
+    })
+    .sort((a, b) => b.calculatedScore - a.calculatedScore);
 
   const getRiskColor = (score: number) => {
-    if (score >= 70) return COLORS.danger;
-    if (score >= 40) return COLORS.warning;
-    return COLORS.success;
+    return getRiskCategory(Math.round(score)).color;
   };
 
   const getRiskLabel = (score: number) => {
-    if (score >= 70) return 'High Risk';
-    if (score >= 40) return 'Moderate';
-    return 'Low Risk';
+    const category = getRiskCategory(score).category;
+    return category
+      .split('_')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
   };
 
   const handleAnalyzeCustomer = (customer: Customer) => {
@@ -245,7 +254,9 @@ export default function CustomerList({ customers, loading, onRefresh }: Customer
             <p style={{ color: COLORS.secondary }}>No customers found. Upload a CSV file to get started.</p>
           </div>
         ) : (
-          filteredCustomers.map((customer) => (
+          filteredCustomers.map((customer: any) => {
+            const displayScore = Math.round(customer.calculatedScore);
+            return (
             <div key={customer.id}>
               <div
                 className="rounded-2xl border p-6 transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
@@ -280,12 +291,12 @@ export default function CustomerList({ customers, loading, onRefresh }: Customer
                       <div
                         className="px-3 py-1 rounded-full text-sm font-semibold border"
                         style={{
-                          backgroundColor: `${getRiskColor(customer.risk_score)}20`,
-                          borderColor: `${getRiskColor(customer.risk_score)}30`,
-                          color: getRiskColor(customer.risk_score),
+                          backgroundColor: `${getRiskColor(displayScore)}20`,
+                          borderColor: `${getRiskColor(displayScore)}30`,
+                          color: getRiskColor(displayScore),
                         }}
                       >
-                        {getRiskLabel(customer.risk_score)} ({customer.risk_score})
+                        {getRiskLabel(displayScore)} ({displayScore})
                       </div>
                     </div>
 
@@ -322,7 +333,7 @@ export default function CustomerList({ customers, loading, onRefresh }: Customer
                         <div>
                           <p className="text-xs" style={{ color: COLORS.secondary }}>Status</p>
                           <p className="font-semibold capitalize" style={{ color: COLORS.dark }}>
-                            {customer.status.replace('_', ' ')}
+                            {getRiskLabel(displayScore)}
                           </p>
                         </div>
                       </div>
@@ -400,7 +411,7 @@ export default function CustomerList({ customers, loading, onRefresh }: Customer
                 {showAnalysis && selectedCustomer?.id === customer.id && (
                   <div className="mt-4">
                     <CustomerAnalysis
-                      customer={selectedCustomer}
+                      customer={selectedCustomer as Customer}
                       onClose={() => {
                         setShowAnalysis(false);
                         setSelectedCustomer(null);
@@ -496,7 +507,8 @@ export default function CustomerList({ customers, loading, onRefresh }: Customer
                 )}
               </div>
             </div>
-          ))
+            );
+          })
         )}
       </div>
 
