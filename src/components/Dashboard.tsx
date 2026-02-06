@@ -46,37 +46,25 @@ import {
   EyeOff,
   Target as TargetIcon,
   LineChart as LineChartIcon,
-  Sparkle,
-  Castle as CastleIcon,
-  Shield,
-  BookOpen,
-  Coins,
-  Scale,
-  ScrollText,
 } from 'lucide-react';
 import FileUpload from './FileUpload';
 import CustomerList from './CustomerList';
 import Analytics from './Analytics';
 
-// Enhanced Royal color palette
+// Royal color palette
 const COLORS = {
-  primary: '#1b4079',    // Royal Deep Blue
-  primaryLight: '#2b5089',
+  primary: '#1b4079',    // Royal Blue
   secondary: '#4d7c8a',  // Steel Blue
-  secondaryLight: '#5d8c9a',
   accent1: '#7f9c96',    // Sage Green
   accent2: '#8fad88',    // Olive Green
   accent3: '#cbdf90',    // Pale Green
   gold: '#d4af37',       // Royal Gold
-  goldLight: '#e4bf47',
-  goldDark: '#c49f27',
-  light: '#f5f7fa',
-  dark: '#0a1a2e',
+  lightGold: '#f4e4a6',
+  dark: '#0a1931',
+  light: '#f8f9fa',
   success: '#10b981',
   warning: '#f59e0b',
   danger: '#ef4444',
-  royalPurple: '#6b46c1',
-  royalRed: '#b91c1c',
 };
 
 export default function Dashboard() {
@@ -88,10 +76,10 @@ export default function Dashboard() {
   const [searchTerm, setSearchTerm] = useState('');
   const [showRevenue, setShowRevenue] = useState(true);
   const [notifications, setNotifications] = useState([
-    { id: 1, message: 'New royal-tier customer onboarded', time: '10 min ago', type: 'success', unread: true },
-    { id: 2, message: 'Monthly report is ready for review', time: '2 hours ago', type: 'info', unread: true },
+    { id: 1, message: 'New high-risk customer detected', time: '10 min ago', type: 'warning', unread: true },
+    { id: 2, message: 'Monthly report is ready', time: '2 hours ago', type: 'info', unread: true },
     { id: 3, message: 'System update completed', time: '1 day ago', type: 'success', unread: false },
-    { id: 4, message: 'Royal tier milestone reached', time: '2 days ago', type: 'achievement', unread: false },
+    { id: 4, message: 'Royal tier milestone reached', time: '2 days ago', type: 'info', unread: false },
   ]);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
@@ -196,46 +184,43 @@ export default function Dashboard() {
   }) => (
     <button
       onClick={() => setActiveTab(tab)}
-      className={`w-full flex items-center p-4 rounded-xl transition-all duration-300 group ${
+      className={`w-full flex items-center p-4 rounded-2xl transition-all duration-300 group ${
         activeTab === tab 
-          ? 'bg-gradient-to-r from-[#1b4079] to-[#4d7c8a] text-white shadow-lg transform scale-[1.02]' 
-          : 'text-gray-700 hover:bg-white/50 hover:shadow-md border border-[#1b4079]/10'
+          ? 'bg-gradient-to-r from-[#1b4079] to-[#4d7c8a] text-white shadow-lg' 
+          : 'text-gray-600 hover:bg-white/10 hover:text-gray-800 border border-white/5'
       }`}
       style={{
         backdropFilter: 'blur(10px)',
       }}
     >
-      <div className={`relative flex items-center justify-center w-10 h-10 rounded-xl mr-4 transition-all duration-300 ${
+      <div className={`flex items-center justify-center w-12 h-12 rounded-xl mr-4 transition-all ${
         activeTab === tab 
-          ? 'bg-white/20 backdrop-blur-sm' 
-          : 'bg-gradient-to-br from-[#f5f7fa] to-white shadow-inner group-hover:shadow-sm'
+          ? 'bg-white/20' 
+          : 'bg-gray-100 group-hover:bg-gray-200'
       }`}>
-        <Icon className={`w-5 h-5 transition-all duration-300 ${
-          activeTab === tab ? 'text-white scale-110' : 'text-[#4d7c8a] group-hover:text-[#1b4079]'
+        <Icon className={`w-6 h-6 ${
+          activeTab === tab ? 'text-white' : 'text-gray-500 group-hover:text-gray-700'
         }`} />
-        {activeTab === tab && (
-          <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-r from-[#d4af37] to-[#e4bf47] rounded-full shadow-sm" />
-        )}
       </div>
       
       {sidebarOpen && (
-        <div className="flex-1 text-left transition-all duration-300">
+        <div className="flex-1 text-left">
           <div className="flex items-center justify-between">
-            <span className={`font-semibold text-sm transition-all duration-300 ${
-              activeTab === tab ? 'text-white' : 'text-[#1b4079]'
-            }`}>
+            <span className="font-semibold text-sm" style={{ 
+              color: activeTab === tab ? 'white' : COLORS.dark 
+            }}>
               {label}
             </span>
             {badge && (
-              <span className="px-2 py-0.5 text-xs rounded-full bg-gradient-to-r from-[#ef4444] to-[#dc2626] text-white shadow-sm">
+              <span className="px-2 py-1 text-xs rounded-full bg-red-500/30 text-red-600">
                 {badge}
               </span>
             )}
           </div>
           {description && (
-            <p className={`text-xs mt-1 transition-all duration-300 ${
-              activeTab === tab ? 'text-white/90' : 'text-[#4d7c8a]'
-            }`}>
+            <p className="text-xs mt-1" style={{ 
+              color: activeTab === tab ? 'rgba(255,255,255,0.8)' : COLORS.secondary 
+            }}>
               {description}
             </p>
           )}
@@ -243,10 +228,8 @@ export default function Dashboard() {
       )}
       
       {sidebarOpen && (
-        <ChevronRight className={`w-4 h-4 ml-2 transition-all duration-300 ${
-          activeTab === tab 
-            ? 'translate-x-1 text-white opacity-100' 
-            : 'text-transparent group-hover:text-[#4d7c8a] opacity-0 group-hover:opacity-100'
+        <ChevronRight className={`w-4 h-4 ml-2 transition-transform ${
+          activeTab === tab ? 'translate-x-1 text-white' : 'text-transparent group-hover:text-gray-400'
         }`} />
       )}
     </button>
@@ -274,103 +257,86 @@ export default function Dashboard() {
     iconBg?: string;
   }) => (
     <div 
-      className="rounded-2xl p-5 relative overflow-hidden group transition-all duration-300 hover:scale-[1.02] cursor-pointer"
+      className="rounded-2xl p-6 relative overflow-hidden group transition-all duration-300 hover:scale-[1.02] cursor-pointer"
       style={{
-        background: gradient || `linear-gradient(145deg, #ffffff, #f5f7fa)`,
-        border: `1px solid ${color}20`,
-        boxShadow: `0 4px 20px ${color}08, 0 1px 2px ${color}10`,
+        background: gradient || `linear-gradient(135deg, ${COLORS.primary}15, ${COLORS.secondary}15)`,
+        border: `1px solid ${color}30`,
+        boxShadow: `0 8px 32px ${color}15`,
       }}
     >
-      {/* Decorative Corner */}
-      <div className="absolute top-0 right-0 w-16 h-16 opacity-10">
-        <div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-[#d4af37] rounded-tr-2xl" />
-      </div>
-      
       <div className="relative z-10">
-        <div className="flex items-start justify-between mb-5">
+        <div className="flex items-start justify-between mb-6">
           <div 
-            className="p-3 rounded-xl relative overflow-hidden group/icon transition-all duration-300"
+            className="p-3 rounded-xl"
             style={{ 
-              backgroundColor: iconBg || '#ffffff',
+              backgroundColor: iconBg || `${color}20`,
               border: `1px solid ${color}30`,
-              boxShadow: `0 2px 8px ${color}15`,
             }}
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-white/20 opacity-0 group-hover/icon:opacity-100 transition-opacity duration-300" />
-            <Icon className="w-6 h-6 relative z-10" style={{ color }} />
+            <Icon className="w-6 h-6" style={{ color }} />
           </div>
           
           {trend && trendValue && (
-            <div className={`flex items-center px-3 py-1.5 rounded-full shadow-sm ${
-              trend === 'up' ? 'bg-gradient-to-r from-[#10b981]/20 to-[#34d399]/20 text-[#10b981]' :
-              trend === 'down' ? 'bg-gradient-to-r from-[#ef4444]/20 to-[#dc2626]/20 text-[#ef4444]' :
-              'bg-gradient-to-r from-[#4d7c8a]/20 to-[#1b4079]/20 text-[#4d7c8a]'
+            <div className={`flex items-center px-3 py-1.5 rounded-full ${
+              trend === 'up' ? 'bg-emerald-500/20 text-emerald-600' :
+              trend === 'down' ? 'bg-red-500/20 text-red-600' :
+              'bg-gray-500/20 text-gray-600'
             }`}>
-              {trend === 'up' ? <TrendingUp className="w-3.5 h-3.5 mr-1.5" /> : 
-               trend === 'down' ? <TrendingUp className="w-3.5 h-3.5 mr-1.5 rotate-180" /> : null}
+              {trend === 'up' ? <TrendingUp className="w-3 h-3 mr-1" /> : 
+               trend === 'down' ? <TrendingUp className="w-3 h-3 mr-1 rotate-180" /> : null}
               <span className="text-xs font-semibold">{trendValue}</span>
             </div>
           )}
         </div>
         
         <div>
-          <p className="text-2xl font-bold mb-2 bg-gradient-to-r from-[#1b4079] to-[#4d7c8a] bg-clip-text text-transparent">
+          <p className="text-3xl font-bold mb-2" style={{ color: COLORS.dark }}>
             {value}
           </p>
-          <p className="text-sm font-semibold mb-1.5 text-[#1b4079]">{title}</p>
+          <p className="text-sm font-semibold mb-1" style={{ color: COLORS.primary }}>
+            {title}
+          </p>
           {subtitle && (
-            <p className="text-xs text-[#4d7c8a] flex items-center">
-              <Sparkle className="w-3 h-3 mr-1" />
+            <p className="text-xs" style={{ color: COLORS.secondary }}>
               {subtitle}
             </p>
           )}
         </div>
       </div>
-      
-      {/* Hover Effect Line */}
-      <div className="absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-current to-transparent opacity-0 group-hover:opacity-20 transition-opacity duration-300" />
     </div>
   );
 
   const QuickActionCard = ({ icon: Icon, title, description, onClick, color }: any) => (
     <button
       onClick={onClick}
-      className="p-4 rounded-xl transition-all duration-300 hover:scale-[1.03] group text-left relative overflow-hidden"
+      className="p-4 rounded-xl transition-all duration-300 hover:scale-105 group text-left"
       style={{
-        background: `linear-gradient(145deg, #ffffff, #f5f7fa)`,
-        border: `1px solid ${color}30`,
-        boxShadow: `0 2px 8px ${color}10`,
+        background: `linear-gradient(135deg, ${color}10, ${color}05)`,
+        border: `1px solid ${color}20`,
       }}
     >
-      {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-5">
-        <div className="absolute inset-0" style={{
-          backgroundImage: `radial-gradient(${color}40 1px, transparent 1px)`,
-          backgroundSize: '20px 20px',
-        }} />
-      </div>
-      
-      <div className="relative z-10">
-        <div className="flex items-center mb-3">
-          <div 
-            className="p-2.5 rounded-lg mr-3 group-hover:scale-110 transition-transform relative overflow-hidden"
-            style={{ backgroundColor: color + '15' }}
-          >
-            <div className="absolute inset-0 bg-gradient-to-br from-transparent to-white/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-            <Icon className="w-5 h-5 relative z-10" style={{ color }} />
-          </div>
-          <span className="font-semibold text-sm text-[#1b4079]">{title}</span>
+      <div className="flex items-center mb-3">
+        <div 
+          className="p-2 rounded-lg mr-3 group-hover:scale-110 transition-transform"
+          style={{ backgroundColor: color + '20' }}
+        >
+          <Icon className="w-5 h-5" style={{ color }} />
         </div>
-        <p className="text-xs text-[#4d7c8a] leading-relaxed">{description}</p>
+        <span className="font-semibold text-sm" style={{ color: COLORS.dark }}>
+          {title}
+        </span>
       </div>
+      <p className="text-xs" style={{ color: COLORS.secondary }}>
+        {description}
+      </p>
     </button>
   );
 
   const recentActivities = [
-    { id: 1, action: 'Royal customer onboarded', user: 'Alex Chen', time: '10 min ago', icon: Crown, color: COLORS.gold },
-    { id: 2, action: 'Risk assessment completed', user: 'System AI', time: '25 min ago', icon: ShieldCheck, color: COLORS.primary },
-    { id: 3, action: 'Payment received', user: 'Customer #245', time: '1 hour ago', icon: Coins, color: COLORS.success },
-    { id: 4, action: 'Royal report generated', user: 'Auto System', time: '2 hours ago', icon: ScrollText, color: COLORS.royalPurple },
+    { id: 1, action: 'New customer uploaded', user: 'Alex Chen', time: '10 min ago', icon: Upload, color: COLORS.primary },
+    { id: 2, action: 'Risk score updated', user: 'System', time: '25 min ago', icon: AlertCircle, color: COLORS.warning },
+    { id: 3, action: 'Payment received', user: 'Customer #245', time: '1 hour ago', icon: DollarSign, color: COLORS.success },
+    { id: 4, action: 'Report generated', user: 'Auto System', time: '2 hours ago', icon: BarChart3, color: COLORS.secondary },
   ];
 
   const quickActions = [
@@ -382,43 +348,35 @@ export default function Dashboard() {
 
   return (
     <div 
-      className="min-h-screen overflow-hidden relative font-sans antialiased"
+      className="min-h-screen overflow-hidden relative font-sans"
       style={{ 
         backgroundColor: COLORS.light,
         color: COLORS.dark,
       }}
     >
-      {/* Enhanced Background Pattern */}
+      {/* Background Pattern */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        {/* Royal Pattern Overlay */}
         <div 
           className="absolute inset-0"
           style={{
-            backgroundImage: `radial-gradient(circle at 20% 80%, ${COLORS.primary}10 0%, transparent 50%),
-                             radial-gradient(circle at 80% 20%, ${COLORS.accent1}10 0%, transparent 50%),
-                             radial-gradient(circle at 40% 40%, ${COLORS.gold}05 0%, transparent 50%)`,
+            backgroundImage: `linear-gradient(45deg, ${COLORS.primary} 2%, transparent 2.5%),
+                              linear-gradient(-45deg, ${COLORS.primary} 2%, transparent 2.5%),
+                              linear-gradient(45deg, transparent 97%, ${COLORS.primary} 97.5%),
+                              linear-gradient(-45deg, transparent 97%, ${COLORS.primary} 97.5%)`,
+            backgroundSize: '80px 80px',
+            backgroundPosition: '0 0, 0 40px, 40px -40px, -40px 0',
+            opacity: 0.03,
           }}
         />
-        
-        {/* Grid Pattern */}
-        <div 
-          className="absolute inset-0"
-          style={{
-            backgroundImage: `linear-gradient(${COLORS.primary}05 1px, transparent 1px),
-                             linear-gradient(90deg, ${COLORS.primary}05 1px, transparent 1px)`,
-            backgroundSize: '50px 50px',
-            opacity: 0.5,
-          }}
-        />
+        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-blue-50/30 via-transparent to-emerald-50/30" />
       </div>
 
-      {/* Enhanced Top Navigation */}
+      {/* Top Navigation */}
       <nav 
         className="sticky top-0 z-50 backdrop-blur-xl border-b"
         style={{ 
-          background: `linear-gradient(135deg, ${COLORS.primary}15, ${COLORS.secondary}10)`,
+          backgroundColor: `${COLORS.primary}15`,
           borderColor: `${COLORS.primary}20`,
-          boxShadow: `0 4px 20px ${COLORS.primary}10`,
         }}
       >
         <div className="px-6">
@@ -427,45 +385,35 @@ export default function Dashboard() {
             <div className="flex items-center space-x-4">
               <button
                 onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="p-3 rounded-xl transition-all hover:scale-105 lg:hidden relative overflow-hidden group"
+                className="p-3 rounded-xl transition-all hover:scale-105 lg:hidden"
                 style={{ 
                   backgroundColor: `${COLORS.primary}15`,
-                  border: `1px solid ${COLORS.primary}30`,
+                  border: `1px solid ${COLORS.primary}20`,
                 }}
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-transparent to-white/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                {sidebarOpen ? (
-                  <X className="w-5 h-5 relative z-10" style={{ color: COLORS.primary }} />
-                ) : (
-                  <Menu className="w-5 h-5 relative z-10" style={{ color: COLORS.primary }} />
-                )}
+                {sidebarOpen ? <X className="w-5 h-5" style={{ color: COLORS.primary }} /> : 
+                              <Menu className="w-5 h-5" style={{ color: COLORS.primary }} />}
               </button>
               
               <div className="flex items-center space-x-3">
                 <div 
-                  className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg relative overflow-hidden group"
+                  className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg"
                   style={{ 
                     background: `linear-gradient(135deg, ${COLORS.primary}, ${COLORS.secondary})`,
                     boxShadow: `0 8px 32px ${COLORS.primary}30`,
                   }}
                 >
-                  <div className="absolute inset-0 bg-gradient-to-br from-transparent to-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  <Crown className="w-5 h-5 text-white relative z-10" />
+                  <Crown className="w-5 h-5 text-white" />
                 </div>
                 <div>
                   <span 
                     className="text-xl font-bold tracking-tight"
-                    style={{ 
-                      background: `linear-gradient(135deg, ${COLORS.primary}, ${COLORS.secondary})`,
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
-                    }}
+                    style={{ color: COLORS.primary }}
                   >
-                    Royal Risk Management
+                    Payment Pulse
                   </span>
-                  <p className="text-xs flex items-center" style={{ color: COLORS.secondary }}>
-                    <Shield className="w-3 h-3 mr-1" />
-                    Premium Dashboard
+                  <p className="text-xs" style={{ color: COLORS.secondary }}>
+                    Royal Risk Management
                   </p>
                 </div>
               </div>
@@ -474,79 +422,55 @@ export default function Dashboard() {
             {/* Middle Section - Search */}
             <div className="hidden md:flex flex-1 max-w-2xl mx-8">
               <div 
-                className="relative w-full group"
+                className="relative w-full"
                 style={{ 
-                  background: 'rgba(255, 255, 255, 0.8)',
-                  border: `1px solid ${COLORS.primary}30`,
+                  backgroundColor: `${COLORS.primary}10`,
+                  border: `1px solid ${COLORS.primary}20`,
                   borderRadius: '12px',
-                  backdropFilter: 'blur(10px)',
-                  boxShadow: `0 4px 12px ${COLORS.primary}10`,
                 }}
               >
                 <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5" style={{ color: COLORS.secondary }} />
                 <input
                   type="text"
-                  placeholder="Search royal customers, reports, or analytics..."
-                  className="w-full pl-12 pr-4 py-3 bg-transparent focus:outline-none placeholder-[#4d7c8a]/70"
+                  placeholder="Search customers, reports, or analytics..."
+                  className="w-full pl-12 pr-4 py-3 bg-transparent focus:outline-none"
                   style={{ color: COLORS.dark }}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
-                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 px-2 py-1 text-xs rounded-md bg-gradient-to-r from-[#1b4079]/10 to-[#4d7c8a]/10 text-[#4d7c8a]">
-                  Royal
-                </div>
               </div>
             </div>
 
             {/* Right Section */}
             <div className="flex items-center space-x-3">
-              {/* Royal Badge */}
-              <div className="hidden lg:block">
-                <div className="flex items-center px-3 py-1.5 rounded-full bg-gradient-to-r from-[#d4af37]/20 to-[#e4bf47]/20">
-                  <Diamond className="w-4 h-4 mr-2" style={{ color: COLORS.gold }} />
-                  <span className="text-sm font-medium" style={{ color: COLORS.goldDark }}>Royal Tier</span>
-                </div>
-              </div>
-
               {/* Notifications */}
               <div className="relative">
                 <button 
-                  className="p-3 rounded-xl relative transition-all hover:scale-105 group"
+                  className="p-3 rounded-xl relative transition-all hover:scale-105"
                   style={{ 
                     backgroundColor: `${COLORS.primary}15`,
-                    border: `1px solid ${COLORS.primary}30`,
+                    border: `1px solid ${COLORS.primary}20`,
                   }}
                   onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
                   onBlur={() => setTimeout(() => setIsNotificationsOpen(false), 200)}
                 >
-                  <div className="absolute inset-0 bg-gradient-to-br from-transparent to-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  <Bell className="w-5 h-5 relative z-10" style={{ color: COLORS.primary }} />
-                  <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-gradient-to-r from-[#ef4444] to-[#dc2626] rounded-full border-2 border-white shadow-sm"></span>
+                  <Bell className="w-5 h-5" style={{ color: COLORS.primary }} />
+                  <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
                 </button>
                 
-                {/* Enhanced Notifications Dropdown */}
+                {/* Notifications Dropdown */}
                 {isNotificationsOpen && (
                   <div 
-                    className="absolute right-0 mt-2 w-96 bg-white rounded-2xl shadow-2xl z-50 overflow-hidden"
+                    className="absolute right-0 mt-2 w-96 bg-white rounded-2xl shadow-2xl z-50"
                     style={{ 
-                      border: `1px solid ${COLORS.primary}30`,
+                      border: `1px solid ${COLORS.primary}20`,
                       backdropFilter: 'blur(20px)',
-                      boxShadow: `0 20px 60px ${COLORS.primary}20`,
                     }}
                   >
-                    <div 
-                      className="p-4 border-b"
-                      style={{ 
-                        borderColor: `${COLORS.primary}20`,
-                        background: `linear-gradient(135deg, ${COLORS.primary}05, ${COLORS.secondary}05)`,
-                      }}
-                    >
+                    <div className="p-4 border-b" style={{ borderColor: `${COLORS.primary}20` }}>
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center">
-                          <Bell className="w-5 h-5 mr-2" style={{ color: COLORS.primary }} />
-                          <h3 className="font-semibold text-[#1b4079]">Royal Notifications</h3>
-                        </div>
-                        <span className="px-2 py-1 text-xs rounded-full bg-gradient-to-r from-[#1b4079] to-[#4d7c8a] text-white">
+                        <h3 className="font-semibold" style={{ color: COLORS.primary }}>Notifications</h3>
+                        <span className="text-xs px-2 py-1 rounded-full" style={{ backgroundColor: `${COLORS.primary}15`, color: COLORS.primary }}>
                           {notifications.filter(n => n.unread).length} new
                         </span>
                       </div>
@@ -556,48 +480,32 @@ export default function Dashboard() {
                       {notifications.map((note) => (
                         <div 
                           key={note.id}
-                          className={`p-4 border-b hover:bg-gradient-to-r hover:from-[#1b4079]/5 hover:to-[#4d7c8a]/5 transition-colors cursor-pointer group/note ${
-                            note.unread ? 'bg-gradient-to-r from-[#1b4079]/3 to-transparent' : ''
-                          }`}
+                          className="p-4 border-b hover:bg-gray-50/50 transition-colors cursor-pointer"
                           style={{ borderColor: `${COLORS.primary}10` }}
                           onClick={() => markNotificationAsRead(note.id)}
                         >
                           <div className="flex items-start space-x-3">
                             <div 
-                              className={`p-2 rounded-lg flex-shrink-0 transition-all duration-300 group-hover/note:scale-110 ${
-                                note.unread ? 'opacity-100' : 'opacity-60'
-                              }`}
+                              className={`p-2 rounded-lg ${note.unread ? 'opacity-100' : 'opacity-60'}`}
                               style={{ 
-                                background: note.type === 'warning' 
-                                  ? `linear-gradient(135deg, ${COLORS.warning}15, ${COLORS.warning}05)`
-                                  : note.type === 'success'
-                                  ? `linear-gradient(135deg, ${COLORS.success}15, ${COLORS.success}05)`
-                                  : note.type === 'achievement'
-                                  ? `linear-gradient(135deg, ${COLORS.gold}15, ${COLORS.goldLight}05)`
-                                  : `linear-gradient(135deg, ${COLORS.primary}15, ${COLORS.secondary}05)`,
+                                backgroundColor: note.type === 'warning' ? `${COLORS.warning}15` :
+                                              note.type === 'success' ? `${COLORS.success}15` : `${COLORS.primary}15`,
                                 border: `1px solid ${
                                   note.type === 'warning' ? COLORS.warning + '30' :
-                                  note.type === 'success' ? COLORS.success + '30' :
-                                  note.type === 'achievement' ? COLORS.gold + '30' : COLORS.primary + '30'
+                                  note.type === 'success' ? COLORS.success + '30' : COLORS.primary + '30'
                                 }`,
                               }}
                             >
                               {note.type === 'warning' ? <AlertTriangle className="w-4 h-4" style={{ color: COLORS.warning }} /> :
                                note.type === 'success' ? <CheckCircle className="w-4 h-4" style={{ color: COLORS.success }} /> :
-                               note.type === 'achievement' ? <Award className="w-4 h-4" style={{ color: COLORS.gold }} /> :
                                <Bell className="w-4 h-4" style={{ color: COLORS.primary }} />}
                             </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="font-medium text-sm text-[#1b4079] truncate">{note.message}</p>
-                              <div className="flex items-center justify-between mt-1">
-                                <p className="text-xs text-[#4d7c8a]">{note.time}</p>
-                                {note.type === 'achievement' && (
-                                  <Sparkle className="w-3 h-3 text-[#d4af37]" />
-                                )}
-                              </div>
+                            <div className="flex-1">
+                              <p className="font-medium text-sm" style={{ color: COLORS.dark }}>{note.message}</p>
+                              <p className="text-xs mt-1" style={{ color: COLORS.secondary }}>{note.time}</p>
                             </div>
                             {note.unread && (
-                              <div className="w-2 h-2 rounded-full bg-gradient-to-r from-[#1b4079] to-[#4d7c8a] mt-1 flex-shrink-0"></div>
+                              <div className="w-2 h-2 rounded-full bg-blue-500 mt-1"></div>
                             )}
                           </div>
                         </div>
@@ -610,126 +518,85 @@ export default function Dashboard() {
               {/* User Profile */}
               <div className="relative">
                 <button 
-                  className="flex items-center space-x-3 p-2 rounded-xl transition-all hover:scale-105 group"
+                  className="flex items-center space-x-3 p-2 rounded-xl transition-all hover:scale-105"
                   style={{ 
-                    background: `linear-gradient(135deg, ${COLORS.primary}15, ${COLORS.secondary}10)`,
-                    border: `1px solid ${COLORS.primary}30`,
-                    boxShadow: `0 4px 12px ${COLORS.primary}10`,
+                    backgroundColor: `${COLORS.primary}15`,
+                    border: `1px solid ${COLORS.primary}20`,
                   }}
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                   onBlur={() => setTimeout(() => setIsDropdownOpen(false), 200)}
                 >
                   <div 
-                    className="w-9 h-9 rounded-lg flex items-center justify-center relative overflow-hidden group/avatar"
+                    className="w-9 h-9 rounded-lg flex items-center justify-center"
                     style={{ 
                       background: `linear-gradient(135deg, ${COLORS.primary}, ${COLORS.secondary})`,
                     }}
                   >
-                    <div className="absolute inset-0 bg-gradient-to-br from-transparent to-white/30 opacity-0 group-hover/avatar:opacity-100 transition-opacity duration-300" />
-                    <span className="text-white font-semibold text-sm relative z-10">
+                    <span className="text-white font-semibold text-sm">
                       {user?.email?.charAt(0).toUpperCase() || 'A'}
                     </span>
                   </div>
                   <div className="hidden md:block text-left">
-                    <p className="text-sm font-semibold text-[#1b4079]">
-                      {user?.email?.split('@')[0] || 'Royal Admin'}
+                    <p className="text-sm font-semibold" style={{ color: COLORS.dark }}>
+                      {user?.email?.split('@')[0] || 'Admin'}
                     </p>
-                    <p className="text-xs flex items-center" style={{ color: COLORS.secondary }}>
-                      <CastleIcon className="w-3 h-3 mr-1" />
-                      Supreme Authority
-                    </p>
+                    <p className="text-xs" style={{ color: COLORS.secondary }}>Royal Admin</p>
                   </div>
-                  <ChevronDown className="w-4 h-4 transition-transform duration-300" style={{ 
-                    color: COLORS.secondary,
-                    transform: isDropdownOpen ? 'rotate(180deg)' : 'none' 
-                  }} />
+                  <ChevronDown className="w-4 h-4" style={{ color: COLORS.secondary }} />
                 </button>
                 
-                {/* Enhanced Profile Dropdown */}
+                {/* Profile Dropdown */}
                 {isDropdownOpen && (
                   <div 
-                    className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-2xl z-50 overflow-hidden"
+                    className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-2xl z-50"
                     style={{ 
-                      border: `1px solid ${COLORS.primary}30`,
-                      boxShadow: `0 20px 60px ${COLORS.primary}20`,
+                      border: `1px solid ${COLORS.primary}20`,
                     }}
                   >
-                    {/* Dropdown Header */}
-                    <div 
-                      className="p-4 border-b"
-                      style={{ 
-                        borderColor: `${COLORS.primary}20`,
-                        background: `linear-gradient(135deg, ${COLORS.primary}05, ${COLORS.secondary}05)`,
-                      }}
-                    >
+                    <div className="p-4 border-b" style={{ borderColor: `${COLORS.primary}20` }}>
                       <div className="flex items-center space-x-3">
                         <div 
-                          className="w-12 h-12 rounded-lg flex items-center justify-center relative overflow-hidden"
+                          className="w-12 h-12 rounded-lg flex items-center justify-center"
                           style={{ 
                             background: `linear-gradient(135deg, ${COLORS.primary}, ${COLORS.secondary})`,
-                            boxShadow: `0 4px 12px ${COLORS.primary}30`,
                           }}
                         >
-                          <div className="absolute inset-0 bg-gradient-to-br from-transparent to-white/30" />
-                          <span className="text-white font-semibold text-base relative z-10">
+                          <span className="text-white font-semibold text-base">
                             {user?.email?.charAt(0).toUpperCase() || 'A'}
                           </span>
                         </div>
                         <div>
-                          <p className="font-semibold text-[#1b4079]">
-                            {user?.email?.split('@')[0] || 'Royal Admin'}
+                          <p className="font-semibold" style={{ color: COLORS.dark }}>
+                            {user?.email?.split('@')[0] || 'Admin User'}
                           </p>
-                          <p className="text-xs text-[#4d7c8a]">{user?.email}</p>
+                          <p className="text-xs" style={{ color: COLORS.secondary }}>{user?.email}</p>
                         </div>
-                      </div>
-                      
-                      {/* Royal Badge */}
-                      <div className="mt-3 flex items-center justify-between">
-                        <div className="flex items-center px-2 py-1 rounded-md bg-gradient-to-r from-[#d4af37]/20 to-[#e4bf47]/20">
-                          <Crown className="w-3 h-3 mr-1" style={{ color: COLORS.gold }} />
-                          <span className="text-xs font-medium" style={{ color: COLORS.goldDark }}>Royal Access</span>
-                        </div>
-                        <div className="text-xs text-[#4d7c8a]">ID: #R-001</div>
                       </div>
                     </div>
                     
-                    {/* Dropdown Menu */}
                     <div className="p-2">
-                      {[
-                        { icon: User, label: 'Royal Profile', color: COLORS.primary },
-                        { icon: Settings, label: 'Kingdom Settings', color: COLORS.secondary },
-                        { icon: Shield, label: 'Security', color: COLORS.accent1 },
-                        { icon: BookOpen, label: 'Documentation', color: COLORS.gold },
-                        { icon: HelpCircle, label: 'Royal Support', color: COLORS.royalPurple },
-                      ].map((item, index) => (
-                        <button 
-                          key={index}
-                          className="w-full text-left px-3 py-2.5 rounded-lg hover:bg-gradient-to-r hover:from-[#1b4079]/5 hover:to-[#4d7c8a]/5 transition-colors flex items-center space-x-3 group/item"
-                        >
-                          <div 
-                            className="p-2 rounded-md group-hover/item:scale-110 transition-transform"
-                            style={{ backgroundColor: `${item.color}15` }}
-                          >
-                            <item.icon className="w-4 h-4" style={{ color: item.color }} />
-                          </div>
-                          <span className="text-sm text-[#1b4079] font-medium">{item.label}</span>
-                        </button>
-                      ))}
+                      <button className="w-full text-left px-3 py-2.5 rounded-lg hover:bg-gray-50/50 transition-colors flex items-center space-x-3">
+                        <User className="w-4 h-4" style={{ color: COLORS.primary }} />
+                        <span className="text-sm" style={{ color: COLORS.dark }}>Profile</span>
+                      </button>
+                      <button className="w-full text-left px-3 py-2.5 rounded-lg hover:bg-gray-50/50 transition-colors flex items-center space-x-3">
+                        <Settings className="w-4 h-4" style={{ color: COLORS.primary }} />
+                        <span className="text-sm" style={{ color: COLORS.dark }}>Settings</span>
+                      </button>
+                      <button className="w-full text-left px-3 py-2.5 rounded-lg hover:bg-gray-50/50 transition-colors flex items-center space-x-3">
+                        <HelpCircle className="w-4 h-4" style={{ color: COLORS.primary }} />
+                        <span className="text-sm" style={{ color: COLORS.dark }}>Help & Support</span>
+                      </button>
                     </div>
                     
-                    {/* Sign Out Section */}
-                    <div 
-                      className="p-2 border-t"
-                      style={{ borderColor: `${COLORS.primary}20` }}
-                    >
+                    <div className="p-2 border-t" style={{ borderColor: `${COLORS.primary}20` }}>
                       <button
                         onClick={handleSignOut}
-                        className="w-full text-left px-3 py-2.5 rounded-lg hover:bg-gradient-to-r hover:from-[#ef4444]/10 hover:to-[#dc2626]/10 transition-colors flex items-center space-x-3 group/signout"
+                        className="w-full text-left px-3 py-2.5 rounded-lg hover:bg-red-50/50 transition-colors flex items-center space-x-3"
+                        style={{ color: COLORS.danger }}
                       >
-                        <div className="p-2 rounded-md bg-gradient-to-r from-[#ef4444]/20 to-[#dc2626]/20 group-hover/signout:scale-110 transition-transform">
-                          <LogOut className="w-4 h-4" style={{ color: COLORS.danger }} />
-                        </div>
-                        <span className="text-sm font-medium" style={{ color: COLORS.danger }}>Sign Out</span>
+                        <LogOut className="w-4 h-4" />
+                        <span className="text-sm font-medium">Sign Out</span>
                       </button>
                     </div>
                   </div>
@@ -741,71 +608,49 @@ export default function Dashboard() {
       </nav>
 
       <div className="flex">
-        {/* Enhanced Sidebar */}
+        {/* Sidebar - Fixed and Non-scrollable */}
         <aside 
           className={`fixed lg:sticky lg:top-0 h-[calc(100vh-5rem)] z-40 transition-all duration-300 ${
             sidebarOpen ? 'w-72 translate-x-0' : '-translate-x-full lg:translate-x-0 lg:w-20'
           }`}
           style={{ 
-            background: `linear-gradient(180deg, #ffffff 0%, ${COLORS.light} 100%)`,
+            backgroundColor: 'white',
             borderRight: `1px solid ${COLORS.primary}20`,
             backdropFilter: 'blur(20px)',
             top: '5rem',
             overflow: 'hidden',
-            boxShadow: `20px 0 60px ${COLORS.primary}10`,
           }}
         >
           <div 
             className="h-full flex flex-col p-6 overflow-y-auto"
             style={{ maxHeight: 'calc(100vh - 5rem)' }}
           >
-            {/* Royal Welcome Card */}
+            {/* Welcome Card */}
             {sidebarOpen && (
               <div 
-                className="mb-8 p-5 rounded-2xl relative overflow-hidden"
+                className="mb-8 p-5 rounded-2xl"
                 style={{ 
-                  background: `linear-gradient(135deg, ${COLORS.primary}10, ${COLORS.secondary}10)`,
+                  background: `linear-gradient(135deg, ${COLORS.primary}15, ${COLORS.secondary}15)`,
                   border: `1px solid ${COLORS.primary}30`,
-                  boxShadow: `0 8px 32px ${COLORS.primary}10`,
                 }}
               >
-                {/* Background Pattern */}
-                <div className="absolute inset-0 opacity-10">
-                  <div className="absolute inset-0" style={{
-                    backgroundImage: `radial-gradient(${COLORS.gold}40 1px, transparent 1px)`,
-                    backgroundSize: '30px 30px',
-                  }} />
+                <div className="flex items-center space-x-3 mb-4">
+                  <div 
+                    className="p-2 rounded-lg"
+                    style={{ backgroundColor: `${COLORS.gold}20` }}
+                  >
+                    <Gem className="w-5 h-5" style={{ color: COLORS.gold }} />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold" style={{ color: COLORS.primary }}>Royal Dashboard</h3>
+                    <p className="text-xs" style={{ color: COLORS.secondary }}>Premium Access</p>
+                  </div>
                 </div>
-                
-                <div className="relative z-10">
-                  <div className="flex items-center space-x-3 mb-4">
-                    <div 
-                      className="p-2.5 rounded-lg relative overflow-hidden group/icon"
-                      style={{ 
-                        background: `linear-gradient(135deg, ${COLORS.gold}20, ${COLORS.goldLight}20)`,
-                        border: `1px solid ${COLORS.gold}30`,
-                      }}
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-br from-transparent to-white/30 opacity-0 group-hover/icon:opacity-100 transition-opacity duration-300" />
-                      <Gem className="w-5 h-5 relative z-10" style={{ color: COLORS.gold }} />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-[#1b4079]">Royal Dashboard</h3>
-                      <p className="text-xs flex items-center" style={{ color: COLORS.secondary }}>
-                        <Sparkle className="w-3 h-3 mr-1" />
-                        Supreme Access
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-[#4d7c8a]">Status:</span>
-                    <div className="flex items-center">
-                      <div className="w-2 h-2 rounded-full bg-gradient-to-r from-[#10b981] to-[#34d399] mr-2 animate-pulse" />
-                      <span className="px-2.5 py-1 text-xs rounded-full bg-gradient-to-r from-[#10b981]/20 to-[#34d399]/20 text-[#10b981] font-medium">
-                        Active • Royal
-                      </span>
-                    </div>
-                  </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm" style={{ color: COLORS.dark }}>Status:</span>
+                  <span className="px-2 py-1 text-xs rounded-full bg-emerald-500/20 text-emerald-600 font-medium">
+                    Active
+                  </span>
                 </div>
               </div>
             )}
@@ -813,137 +658,112 @@ export default function Dashboard() {
             {/* Navigation */}
             <nav className="flex-1 space-y-2">
               <NavigationItem 
-                icon={CastleIcon} 
-                label="Royal Overview" 
+                icon={Home} 
+                label="Dashboard Overview" 
                 tab="upload"
-                description="Manage kingdom operations"
+                description="Upload and process data"
               />
               <NavigationItem 
                 icon={Users} 
-                label="Court Members" 
+                label="Customer Management" 
                 tab="customers"
-                description="Monitor royal subjects"
+                description="Monitor and analyze customers"
                 badge={stats.highRisk}
               />
               <NavigationItem 
                 icon={BarChart3} 
-                label="Kingdom Analytics" 
+                label="Advanced Analytics" 
                 tab="analytics"
-                description="Royal insights and reports"
+                description="Deep insights and reports"
               />
             </nav>
-
-            {/* Royal Crest at Bottom */}
-            {sidebarOpen && (
-              <div className="mt-8 pt-6 border-t" style={{ borderColor: `${COLORS.primary}20` }}>
-                <div className="flex items-center justify-center space-x-2 text-[#4d7c8a]">
-                  <Shield className="w-4 h-4" />
-                  <span className="text-xs font-medium">Royal Crest v2.1</span>
-                  <Crown className="w-4 h-4" />
-                </div>
-              </div>
-            )}
           </div>
         </aside>
 
-        {/* Enhanced Main Content */}
+        {/* Main Content */}
         <main className={`flex-1 p-6 transition-all duration-300 ${
           sidebarOpen ? 'lg:ml-0' : 'lg:ml-20'
         }`}>
-          {/* Royal Welcome Header */}
+          {/* Welcome Header */}
           <div className="mb-8">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-[#1b4079] via-[#4d7c8a] to-[#7f9c96] bg-clip-text text-transparent">
-                  Royal Risk Management
-                </h1>
-                <p className="text-sm text-[#4d7c8a] flex items-center">
-                  <Scale className="w-4 h-4 mr-2" />
-                  Supreme oversight of kingdom finances
-                </p>
-              </div>
-              <div className="hidden lg:flex items-center space-x-3">
-                <div className="flex items-center px-3 py-1.5 rounded-full bg-gradient-to-r from-[#1b4079]/10 to-[#4d7c8a]/10">
-                  <Calendar className="w-4 h-4 mr-2" style={{ color: COLORS.primary }} />
-                  <span className="text-sm font-medium text-[#1b4079]">
-                    {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-                  </span>
-                </div>
-              </div>
-            </div>
+            <h1 className="text-3xl font-bold mb-2" style={{ color: COLORS.dark }}>
+              Royal Risk Management Dashboard
+            </h1>
+            <p className="text-sm" style={{ color: COLORS.secondary }}>
+              Welcome back, <span className="font-semibold" style={{ color: COLORS.primary }}>
+                {user?.email?.split('@')[0] || 'Admin'}
+              </span>. Here's what's happening with your customers today.
+            </p>
           </div>
 
-          {/* Royal Stats Grid */}
+          {/* Stats Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <StatCard
-              title="Royal Subjects"
+              title="Total Customers"
               value={stats.totalCustomers.toLocaleString()}
-              icon={CastleIcon}
+              icon={Users}
               color={COLORS.primary}
               trend="up"
               trendValue="+12%"
-              subtitle="Active courtiers"
-              gradient={`linear-gradient(145deg, #ffffff, ${COLORS.light})`}
+              subtitle="Active: 82%"
+              gradient={`linear-gradient(135deg, ${COLORS.primary}15, ${COLORS.secondary}15)`}
+              iconBg={`${COLORS.primary}20`}
             />
             
             <StatCard
-              title="Risk Alerts"
+              title="High Risk"
               value={stats.highRisk}
-              icon={ShieldCheck}
+              icon={AlertCircle}
               color={COLORS.danger}
               trend="up"
               trendValue="+3"
-              subtitle="Require royal attention"
-              gradient={`linear-gradient(145deg, #ffffff, ${COLORS.light})`}
+              subtitle="Require immediate attention"
+              gradient={`linear-gradient(135deg, ${COLORS.danger}10, ${COLORS.warning}10)`}
+              iconBg={`${COLORS.danger}20`}
             />
             
             <StatCard
-              title="Kingdom Treasury"
+              title="Total Outstanding"
               value={`$${(stats.totalOutstanding / 1000000).toFixed(1)}M`}
-              icon={Coins}
+              icon={DollarSign}
               color={COLORS.gold}
               trend="down"
               trendValue="-2.1%"
-              subtitle="Royal collections"
-              gradient={`linear-gradient(145deg, #ffffff, ${COLORS.light})`}
+              subtitle="Across all portfolios"
+              gradient={`linear-gradient(135deg, ${COLORS.gold}15, ${COLORS.lightGold}15)`}
+              iconBg={`${COLORS.gold}20`}
             />
             
             <StatCard
-              title="Royal Score"
+              title="Avg Risk Score"
               value={stats.avgRiskScore.toFixed(1)}
-              icon={Trophy}
+              icon={TrendingUp}
               color={COLORS.success}
               trend="down"
               trendValue="-1.5"
-              subtitle="Kingdom health"
-              gradient={`linear-gradient(145deg, #ffffff, ${COLORS.light})`}
+              subtitle="Overall improvement"
+              gradient={`linear-gradient(135deg, ${COLORS.success}10, ${COLORS.accent1}15)`}
+              iconBg={`${COLORS.success}20`}
             />
           </div>
 
-          {/* Royal Performance & Quick Actions */}
+          {/* Secondary Stats & Quick Actions */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-            {/* Royal Recovery Metrics */}
+            {/* Recovery Metrics */}
             <div 
-              className="p-6 rounded-2xl col-span-1 lg:col-span-2 relative overflow-hidden"
+              className="p-6 rounded-2xl col-span-1 lg:col-span-2"
               style={{ 
-                background: `linear-gradient(145deg, #ffffff, ${COLORS.light})`,
-                border: `1px solid ${COLORS.primary}30`,
-                boxShadow: `0 8px 32px ${COLORS.primary}10`,
+                background: `linear-gradient(135deg, ${COLORS.primary}10, ${COLORS.secondary}10)`,
+                border: `1px solid ${COLORS.primary}20`,
               }}
             >
-              {/* Decorative Border */}
-              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#1b4079] via-[#4d7c8a] to-[#7f9c96]" />
-              
               <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center">
-                  <TargetIcon className="w-5 h-5 mr-2" style={{ color: COLORS.primary }} />
-                  <h2 className="text-lg font-semibold text-[#1b4079]">
-                    Royal Recovery Performance
-                  </h2>
-                </div>
+                <h2 className="text-lg font-semibold" style={{ color: COLORS.primary }}>
+                  Recovery Performance
+                </h2>
                 <button 
                   onClick={() => setShowRevenue(!showRevenue)}
-                  className="p-2 rounded-lg hover:bg-gradient-to-r hover:from-[#1b4079]/10 hover:to-[#4d7c8a]/10 transition-colors"
+                  className="p-2 rounded-lg hover:bg-white/50 transition-colors"
                   style={{ color: COLORS.secondary }}
                 >
                   {showRevenue ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -951,180 +771,95 @@ export default function Dashboard() {
               </div>
               
               <div className="grid grid-cols-2 gap-4">
-                <div 
-                  className="p-5 rounded-xl relative overflow-hidden group"
-                  style={{ 
-                    background: `linear-gradient(145deg, #ffffff, #f5f7fa)`,
-                    border: `1px solid ${COLORS.success}30`,
-                    boxShadow: `0 4px 16px ${COLORS.success}10`,
-                  }}
-                >
-                  <div className="absolute inset-0 bg-gradient-to-br from-transparent to-white/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  <div className="flex items-center mb-3">
-                    <div 
-                      className="p-2.5 rounded-lg mr-3"
-                      style={{ backgroundColor: `${COLORS.success}15` }}
-                    >
+                <div className="p-4 rounded-xl" style={{ backgroundColor: 'white' }}>
+                  <div className="flex items-center mb-2">
+                    <div className="p-2 rounded-lg mr-3" style={{ backgroundColor: `${COLORS.success}15` }}>
                       <TargetIcon className="w-4 h-4" style={{ color: COLORS.success }} />
                     </div>
-                    <span className="text-sm font-semibold text-[#1b4079]">Royal Recovery Rate</span>
+                    <span className="text-sm font-semibold" style={{ color: COLORS.dark }}>Recovery Rate</span>
                   </div>
-                  <p className="text-2xl font-bold mb-1 bg-gradient-to-r from-[#10b981] to-[#34d399] bg-clip-text text-transparent">
-                    {stats.recoveryRate}%
-                  </p>
-                  <p className="text-xs text-[#4d7c8a] flex items-center">
-                    <TrendingUp className="w-3 h-3 mr-1" />
-                    +2.3% from last month
-                  </p>
+                  <p className="text-2xl font-bold mb-1" style={{ color: COLORS.dark }}>{stats.recoveryRate}%</p>
+                  <p className="text-xs" style={{ color: COLORS.secondary }}>+2.3% from last month</p>
                 </div>
                 
-                <div 
-                  className="p-5 rounded-xl relative overflow-hidden group"
-                  style={{ 
-                    background: `linear-gradient(145deg, #ffffff, #f5f7fa)`,
-                    border: `1px solid ${COLORS.warning}30`,
-                    boxShadow: `0 4px 16px ${COLORS.warning}10`,
-                  }}
-                >
-                  <div className="absolute inset-0 bg-gradient-to-br from-transparent to-white/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  <div className="flex items-center mb-3">
-                    <div 
-                      className="p-2.5 rounded-lg mr-3"
-                      style={{ backgroundColor: `${COLORS.warning}15` }}
-                    >
+                <div className="p-4 rounded-xl" style={{ backgroundColor: 'white' }}>
+                  <div className="flex items-center mb-2">
+                    <div className="p-2 rounded-lg mr-3" style={{ backgroundColor: `${COLORS.warning}15` }}>
                       <Clock className="w-4 h-4" style={{ color: COLORS.warning }} />
                     </div>
-                    <span className="text-sm font-semibold text-[#1b4079]">Royal Payment Cycle</span>
+                    <span className="text-sm font-semibold" style={{ color: COLORS.dark }}>Avg Payment Days</span>
                   </div>
-                  <p className="text-2xl font-bold mb-1 bg-gradient-to-r from-[#f59e0b] to-[#fbbf24] bg-clip-text text-transparent">
-                    {stats.avgPaymentDays} days
-                  </p>
-                  <p className="text-xs text-[#4d7c8a] flex items-center">
-                    <TrendingUp className="w-3 h-3 mr-1 rotate-180" />
-                    -3 days improvement
-                  </p>
+                  <p className="text-2xl font-bold mb-1" style={{ color: COLORS.dark }}>{stats.avgPaymentDays}</p>
+                  <p className="text-xs" style={{ color: COLORS.secondary }}>-3 days improvement</p>
                 </div>
               </div>
             </div>
 
-            {/* Royal Quick Actions */}
+            {/* Quick Actions */}
             <div 
-              className="p-6 rounded-2xl relative overflow-hidden"
+              className="p-6 rounded-2xl"
               style={{ 
-                background: `linear-gradient(145deg, #ffffff, ${COLORS.light})`,
-                border: `1px solid ${COLORS.accent1}30`,
-                boxShadow: `0 8px 32px ${COLORS.accent1}10`,
+                background: `linear-gradient(135deg, ${COLORS.accent1}10, ${COLORS.accent2}10)`,
+                border: `1px solid ${COLORS.accent1}20`,
               }}
             >
-              {/* Decorative Corner */}
-              <div className="absolute top-0 right-0 w-20 h-20 opacity-10">
-                <div className="absolute top-0 right-0 w-10 h-10 border-t-2 border-r-2 border-[#8fad88] rounded-tr-2xl" />
-              </div>
-              
-              <div className="flex items-center mb-6">
-                <Zap className="w-5 h-5 mr-2" style={{ color: COLORS.accent1 }} />
-                <h2 className="text-lg font-semibold text-[#1b4079]">Royal Commands</h2>
-              </div>
-              
+              <h2 className="text-lg font-semibold mb-6" style={{ color: COLORS.primary }}>
+                Quick Actions
+              </h2>
               <div className="grid grid-cols-2 gap-3">
                 {quickActions.map((action, index) => (
                   <QuickActionCard key={index} {...action} />
                 ))}
               </div>
-              
-              {/* Command Note */}
-              <div className="mt-4 p-3 rounded-lg bg-gradient-to-r from-[#1b4079]/5 to-[#4d7c8a]/5">
-                <p className="text-xs text-[#4d7c8a] flex items-center">
-                  <Scroll className="w-3 h-3 mr-2" />
-                  Execute commands with royal authority
-                </p>
-              </div>
             </div>
           </div>
 
-          {/* Royal Content Area with Enhanced Tabs */}
+          {/* Main Content Area with Tabs */}
           <div 
             className="rounded-2xl overflow-hidden"
             style={{ 
-              background: `linear-gradient(145deg, #ffffff, ${COLORS.light})`,
-              border: `1px solid ${COLORS.primary}30`,
-              boxShadow: `0 20px 60px ${COLORS.primary}10`,
+              background: 'white',
+              border: `1px solid ${COLORS.primary}20`,
+              boxShadow: `0 8px 32px ${COLORS.primary}10`,
             }}
           >
-            {/* Royal Tab Navigation */}
+            {/* Tab Navigation */}
             <div 
               className="border-b px-6"
-              style={{ 
-                borderColor: `${COLORS.primary}20`,
-                background: `linear-gradient(135deg, ${COLORS.primary}05, ${COLORS.secondary}05)`,
-              }}
+              style={{ borderColor: `${COLORS.primary}20` }}
             >
               <div className="flex space-x-8">
                 {[
-                  { id: 'upload', label: 'Royal Upload', icon: Upload, color: COLORS.primary },
-                  { id: 'customers', label: 'Court Management', icon: Users, color: COLORS.secondary },
-                  { id: 'analytics', label: 'Kingdom Analytics', icon: BarChart3, color: COLORS.accent1 },
+                  { id: 'upload', label: 'Upload & Process', icon: Upload },
+                  { id: 'customers', label: 'Customer Management', icon: Users },
+                  { id: 'analytics', label: 'Advanced Analytics', icon: BarChart3 },
                 ].map((tab) => (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id as any)}
-                    className={`flex items-center space-x-3 py-4 border-b-2 transition-all duration-300 relative group ${
+                    className={`flex items-center space-x-2 py-4 border-b-2 transition-all duration-300 relative ${
                       activeTab === tab.id 
-                        ? 'border-blue-600' 
-                        : 'border-transparent'
+                        ? 'border-blue-600 text-blue-600' 
+                        : 'border-transparent text-gray-500 hover:text-gray-700'
                     }`}
                     style={{
-                      borderColor: activeTab === tab.id ? tab.color : 'transparent',
+                      borderColor: activeTab === tab.id ? COLORS.primary : 'transparent',
+                      color: activeTab === tab.id ? COLORS.primary : COLORS.secondary,
                     }}
                   >
-                    <div className={`p-2 rounded-lg transition-all duration-300 ${
-                      activeTab === tab.id 
-                        ? 'scale-110 bg-gradient-to-br from-white to-white shadow-sm'
-                        : 'group-hover:scale-110'
-                    }`}
-                    style={{
-                      background: activeTab === tab.id 
-                        ? `linear-gradient(145deg, white, #f5f7fa)`
-                        : `linear-gradient(145deg, ${tab.color}15, ${tab.color}05)`,
-                      border: activeTab === tab.id 
-                        ? `1px solid ${tab.color}30`
-                        : `1px solid ${tab.color}20`,
-                    }}>
-                      <tab.icon className={`w-4 h-4 transition-all duration-300 ${
-                        activeTab === tab.id ? 'scale-110' : ''
-                      }`}
-                      style={{ 
-                        color: activeTab === tab.id ? tab.color : `${tab.color}80`
-                      }} />
-                    </div>
-                    <div className="flex flex-col items-start">
-                      <span className={`font-semibold text-sm transition-all duration-300 ${
-                        activeTab === tab.id 
-                          ? 'text-[#1b4079]' 
-                          : 'text-[#4d7c8a] group-hover:text-[#1b4079]'
-                      }`}>
-                        {tab.label}
-                      </span>
-                      <span className="text-xs text-[#4d7c8a]">
-                        {tab.id === 'upload' && 'Process royal documents'}
-                        {tab.id === 'customers' && 'Manage court members'}
-                        {tab.id === 'analytics' && 'Kingdom insights'}
-                      </span>
-                    </div>
+                    <tab.icon className="w-4 h-4" />
+                    <span className="font-medium">{tab.label}</span>
                     {tab.id === 'customers' && stats.highRisk > 0 && (
-                      <span className="absolute -top-1 -right-1 px-2 py-0.5 text-xs rounded-full bg-gradient-to-r from-[#ef4444] to-[#dc2626] text-white shadow-sm">
+                      <span className="px-2 py-0.5 text-xs rounded-full bg-red-500/20 text-red-600">
                         {stats.highRisk}
                       </span>
-                    )}
-                    {activeTab === tab.id && (
-                      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-current to-transparent opacity-20" />
                     )}
                   </button>
                 ))}
               </div>
             </div>
 
-            {/* Royal Content */}
+            {/* Content */}
             <div className="p-6">
               {activeTab === 'upload' && <FileUpload onUploadComplete={loadCustomers} />}
               {activeTab === 'customers' && (
@@ -1134,85 +869,45 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Royal Court Activities */}
+          {/* Recent Activity */}
           <div 
-            className="mt-6 p-6 rounded-2xl relative overflow-hidden"
+            className="mt-6 p-6 rounded-2xl"
             style={{ 
-              background: `linear-gradient(145deg, #ffffff, ${COLORS.light})`,
-              border: `1px solid ${COLORS.primary}30`,
-              boxShadow: `0 8px 32px ${COLORS.primary}10`,
+              background: 'white',
+              border: `1px solid ${COLORS.primary}20`,
             }}
           >
-            {/* Decorative Border */}
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#1b4079] via-[#4d7c8a] to-[#7f9c96]" />
-            
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center">
-                <ScrollText className="w-5 h-5 mr-2" style={{ color: COLORS.primary }} />
-                <h2 className="text-lg font-semibold text-[#1b4079]">Royal Court Activities</h2>
-              </div>
-              <span className="px-3 py-1 text-xs rounded-full bg-gradient-to-r from-[#1b4079]/10 to-[#4d7c8a]/10 text-[#4d7c8a]">
-                Today's Scroll
-              </span>
-            </div>
-            
+            <h2 className="text-lg font-semibold mb-6" style={{ color: COLORS.primary }}>
+              Recent Activity
+            </h2>
             <div className="space-y-4">
               {recentActivities.map((activity) => (
-                <div 
-                  key={activity.id} 
-                  className="flex items-center justify-between p-4 rounded-xl hover:bg-gradient-to-r hover:from-[#1b4079]/5 hover:to-[#4d7c8a]/5 transition-all duration-300 group/activity"
-                  style={{ 
-                    border: `1px solid ${activity.color}20`,
-                    background: `linear-gradient(145deg, #ffffff, #f5f7fa)`,
-                  }}
-                >
+                <div key={activity.id} className="flex items-center justify-between p-4 rounded-xl hover:bg-gray-50/50 transition-colors">
                   <div className="flex items-center space-x-4">
                     <div 
-                      className="p-2.5 rounded-lg relative overflow-hidden group/icon"
+                      className="p-2 rounded-lg"
                       style={{ 
-                        background: `linear-gradient(135deg, ${activity.color}15, ${activity.color}05)`,
+                        backgroundColor: `${activity.color}15`,
                         border: `1px solid ${activity.color}30`,
                       }}
                     >
-                      <div className="absolute inset-0 bg-gradient-to-br from-transparent to-white/30 opacity-0 group-hover/icon:opacity-100 transition-opacity duration-300" />
-                      <activity.icon className="w-4 h-4 relative z-10" style={{ color: activity.color }} />
+                      <activity.icon className="w-4 h-4" style={{ color: activity.color }} />
                     </div>
                     <div>
-                      <p className="font-semibold text-sm text-[#1b4079] group-hover/activity:translate-x-1 transition-transform duration-300">
-                        {activity.action}
-                      </p>
-                      <p className="text-xs text-[#4d7c8a] flex items-center">
-                        <User className="w-3 h-3 mr-1" />
-                        by {activity.user}
-                      </p>
+                      <p className="font-medium text-sm" style={{ color: COLORS.dark }}>{activity.action}</p>
+                      <p className="text-xs" style={{ color: COLORS.secondary }}>by {activity.user}</p>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-3">
-                    <span className="text-xs text-[#4d7c8a] bg-gradient-to-r from-[#1b4079]/10 to-[#4d7c8a]/10 px-2 py-1 rounded">
-                      {activity.time}
-                    </span>
-                    <ChevronRight className="w-4 h-4 text-[#4d7c8a] opacity-0 group-hover/activity:opacity-100 transition-opacity duration-300" />
-                  </div>
+                  <span className="text-xs" style={{ color: COLORS.secondary }}>{activity.time}</span>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Royal Footer */}
+          {/* Footer Note */}
           <div className="mt-8 text-center">
-            <div className="flex items-center justify-center space-x-4 mb-2">
-              <div className="flex items-center text-sm" style={{ color: COLORS.secondary }}>
-                <Shield className="w-4 h-4 mr-2" />
-                Royal Dashboard v2.1 • Protected by Royal Crest
-              </div>
-              <div className="h-4 w-px bg-gradient-to-b from-transparent via-[#4d7c8a] to-transparent" />
-              <div className="flex items-center text-sm" style={{ color: COLORS.secondary }}>
-                <Clock className="w-4 h-4 mr-2" />
-                Last updated: Today, {new Date().getHours()}:{new Date().getMinutes().toString().padStart(2, '0')}
-              </div>
-            </div>
-            <p className="text-xs" style={{ color: COLORS.secondary }}>
-              © {new Date().getFullYear()} Royal Risk Management • All kingdom rights reserved
+            <p className="text-sm" style={{ color: COLORS.secondary }}>
+              Royal Dashboard v2.1 • Last updated: Today, {new Date().getHours()}:{new Date().getMinutes().toString().padStart(2, '0')}
             </p>
           </div>
         </main>
