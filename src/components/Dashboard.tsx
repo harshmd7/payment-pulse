@@ -9,34 +9,17 @@ import {
   AlertCircle,
   BarChart3,
   Zap,
-  FileText,
-  Download,
   Search,
   ChevronRight,
   Bell,
-  Settings,
-  HelpCircle,
   Menu,
   X,
-  Home,
-  User,
-  CreditCard,
-  Shield,
-  PieChart,
-  Activity,
-  Calendar,
-  Filter,
-  MoreVertical,
+  DollarSign,
   ChevronDown,
   CheckCircle,
   Clock,
   AlertTriangle,
-  DollarSign,
-  Globe,
-  Building,
-  MapPin,
-  Phone,
-  Mail,
+  Calendar,
 } from 'lucide-react';
 import FileUpload from './FileUpload';
 import CustomerList from './CustomerList';
@@ -62,19 +45,16 @@ export default function Dashboard() {
     avgRiskScore: 0,
     activeCustomers: 0,
     newThisMonth: 0,
-    paymentsCollected: 0,
     avgPaymentDays: 0,
   });
 
   useEffect(() => {
     loadCustomers();
-    // Mock additional data for demo
     setTimeout(() => {
       setStats(prev => ({
         ...prev,
         activeCustomers: Math.floor(prev.totalCustomers * 0.82),
         newThisMonth: 12,
-        paymentsCollected: 156000,
         avgPaymentDays: 28,
       }));
     }, 1000);
@@ -126,26 +106,6 @@ export default function Dashboard() {
     }
   };
 
-  const getRiskColor = (score: number) => {
-    if (score >= 70) return 'text-red-400';
-    if (score >= 40) return 'text-yellow-400';
-    return 'text-green-400';
-  };
-
-  const getRiskBgColor = (score: number) => {
-    if (score >= 70) return 'bg-red-500/10';
-    if (score >= 40) return 'bg-yellow-500/10';
-    return 'bg-green-500/10';
-  };
-
-  const filteredCustomers = customers.filter(customer =>
-    customer.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    customer.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    customer.company?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const recentCustomers = filteredCustomers.slice(0, 5);
-
   const NavigationItem = ({ 
     icon: Icon, 
     label, 
@@ -161,28 +121,30 @@ export default function Dashboard() {
       onClick={() => setActiveTab(tab)}
       className={`w-full flex items-center justify-between p-3 rounded-xl transition-all duration-200 group ${
         activeTab === tab 
-          ? 'bg-gradient-to-r from-blue-500/20 to-cyan-500/10 border border-blue-500/30 text-white' 
+          ? 'bg-gradient-to-r from-[#4d7c8a]/20 to-[#7f9c96]/10 border border-[#4d7c8a]/30 text-white' 
           : 'text-slate-400 hover:bg-slate-800/50 hover:text-white'
       }`}
     >
       <div className="flex items-center space-x-3">
         <div className={`p-2 rounded-lg ${
           activeTab === tab 
-            ? 'bg-gradient-to-br from-blue-500 to-cyan-400' 
+            ? 'bg-gradient-to-br from-[#1b4079] to-[#4d7c8a]' 
             : 'bg-slate-800 group-hover:bg-slate-700'
         }`}>
           <Icon className="w-4 h-4" />
         </div>
-        <span className="font-medium">{label}</span>
+        {sidebarOpen && <span className="font-medium">{label}</span>}
       </div>
-      {badge && (
+      {badge && sidebarOpen && (
         <span className="px-2 py-1 text-xs rounded-full bg-red-500/20 text-red-400">
           {badge}
         </span>
       )}
-      <ChevronRight className={`w-4 h-4 transition-transform ${
-        activeTab === tab ? 'translate-x-1' : 'opacity-0 group-hover:opacity-100'
-      }`} />
+      {sidebarOpen && (
+        <ChevronRight className={`w-4 h-4 transition-transform ${
+          activeTab === tab ? 'translate-x-1' : 'opacity-0 group-hover:opacity-100'
+        }`} />
+      )}
     </button>
   );
 
@@ -190,27 +152,29 @@ export default function Dashboard() {
     title, 
     value, 
     icon: Icon, 
-    color, 
+    gradient,
+    iconColor,
     trend, 
     subtitle 
   }: { 
     title: string; 
     value: string | number; 
     icon: React.ElementType; 
-    color: string; 
+    gradient: string;
+    iconColor: string;
     trend?: string;
     subtitle?: string;
   }) => (
-    <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/30 backdrop-blur-sm rounded-2xl border border-slate-700/30 p-5 hover:border-slate-600/50 transition-all duration-300 hover:scale-[1.02]">
+    <div className={`bg-gradient-to-br ${gradient} backdrop-blur-sm rounded-2xl border border-white/10 p-5 hover:border-white/20 transition-all duration-300 hover:scale-[1.02] shadow-lg`}>
       <div className="flex items-start justify-between mb-4">
-        <div className={`p-3 rounded-xl ${color} bg-opacity-10`}>
-          <Icon className="w-6 h-6" />
+        <div className={`p-3 rounded-xl ${iconColor} shadow-lg`}>
+          <Icon className="w-6 h-6 text-white" />
         </div>
         {trend && (
           <span className={`text-xs font-semibold px-2 py-1 rounded-full ${
             trend.startsWith('+') 
-              ? 'bg-green-500/10 text-green-400' 
-              : 'bg-red-500/10 text-red-400'
+              ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' 
+              : 'bg-red-500/20 text-red-300 border border-red-500/30'
           }`}>
             {trend}
           </span>
@@ -218,9 +182,9 @@ export default function Dashboard() {
       </div>
       <div>
         <p className="text-2xl font-bold text-white mb-1">{value}</p>
-        <p className="text-slate-400 text-sm font-medium">{title}</p>
+        <p className="text-white/80 text-sm font-medium">{title}</p>
         {subtitle && (
-          <p className="text-slate-500 text-xs mt-2">{subtitle}</p>
+          <p className="text-white/50 text-xs mt-2">{subtitle}</p>
         )}
       </div>
     </div>
@@ -240,7 +204,7 @@ export default function Dashboard() {
                 {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
               </button>
               <div className="flex items-center space-x-3">
-                <div className="w-9 h-9 bg-gradient-to-br from-blue-500 via-blue-600 to-cyan-500 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
+                <div className="w-9 h-9 bg-gradient-to-br from-[#1b4079] via-[#4d7c8a] to-[#7f9c96] rounded-xl flex items-center justify-center shadow-lg shadow-[#4d7c8a]/30">
                   <Zap className="w-5 h-5 text-white" />
                 </div>
                 <div>
@@ -254,11 +218,11 @@ export default function Dashboard() {
 
             <div className="flex items-center space-x-4">
               {/* Search */}
-              <div className="hidden md:flex items-center bg-slate-800/50 rounded-xl px-3 py-2">
+              <div className="hidden md:flex items-center bg-slate-800/50 rounded-xl px-3 py-2 border border-slate-700/50">
                 <Search className="w-4 h-4 text-slate-500" />
                 <input
                   type="text"
-                  placeholder="Search customers, reports..."
+                  placeholder="Search customers..."
                   className="bg-transparent border-none text-sm text-white placeholder-slate-500 focus:outline-none ml-2 w-48"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -267,7 +231,7 @@ export default function Dashboard() {
 
               {/* Notifications */}
               <div className="relative group">
-                <button className="p-2 rounded-lg bg-slate-800/50 hover:bg-slate-700/50 transition-colors relative">
+                <button className="p-2 rounded-lg bg-slate-800/50 hover:bg-slate-700/50 transition-colors relative border border-slate-700/50">
                   <Bell className="w-5 h-5 text-slate-400" />
                   <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
                 </button>
@@ -302,38 +266,30 @@ export default function Dashboard() {
               {/* User Profile */}
               <div className="flex items-center space-x-3">
                 <div className="hidden md:block text-right">
-                  <p className="text-sm font-medium text-white">{user?.name || 'Admin User'}</p>
+                  <p className="text-sm font-medium text-white">{user?.email?.split('@')[0] || 'Admin'}</p>
                   <p className="text-xs text-slate-500">{user?.email}</p>
                 </div>
                 <div className="relative group">
-                  <button className="flex items-center space-x-2 p-2 rounded-xl bg-gradient-to-r from-slate-800/50 to-slate-900/50 border border-slate-800 hover:border-slate-700 transition-all">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center">
-                      <User className="w-4 h-4 text-white" />
+                  <button className="flex items-center space-x-2 p-1.5 rounded-xl bg-gradient-to-r from-slate-800/50 to-slate-900/50 border border-slate-700/50 hover:border-[#4d7c8a]/50 transition-all">
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#4d7c8a] via-[#7f9c96] to-[#8fad88] flex items-center justify-center shadow-lg">
+                      <span className="text-white font-bold text-sm">
+                        {user?.email?.charAt(0).toUpperCase() || 'A'}
+                      </span>
                     </div>
-                    <ChevronDown className="w-4 h-4 text-slate-400" />
+                    <ChevronDown className="w-4 h-4 text-slate-400 mr-1" />
                   </button>
                   <div className="absolute right-0 mt-2 w-48 bg-slate-900/95 backdrop-blur-xl rounded-xl border border-slate-800 shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                    <button className="w-full text-left p-3 text-sm text-slate-300 hover:text-white hover:bg-slate-800/50 rounded-t-xl flex items-center space-x-2">
-                      <User className="w-4 h-4" />
-                      <span>Profile</span>
-                    </button>
-                    <button className="w-full text-left p-3 text-sm text-slate-300 hover:text-white hover:bg-slate-800/50 flex items-center space-x-2">
-                      <Settings className="w-4 h-4" />
-                      <span>Settings</span>
-                    </button>
-                    <button className="w-full text-left p-3 text-sm text-slate-300 hover:text-white hover:bg-slate-800/50 flex items-center space-x-2">
-                      <HelpCircle className="w-4 h-4" />
-                      <span>Help & Support</span>
-                    </button>
-                    <div className="border-t border-slate-800">
-                      <button
-                        onClick={handleSignOut}
-                        className="w-full text-left p-3 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-b-xl flex items-center space-x-2"
-                      >
-                        <LogOut className="w-4 h-4" />
-                        <span>Sign Out</span>
-                      </button>
+                    <div className="p-3 border-b border-slate-800">
+                      <p className="text-sm font-medium text-white">{user?.email?.split('@')[0] || 'Admin User'}</p>
+                      <p className="text-xs text-slate-500 mt-0.5">{user?.email}</p>
                     </div>
+                    <button
+                      onClick={handleSignOut}
+                      className="w-full text-left p-3 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-b-xl flex items-center space-x-2 transition-colors"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      <span>Sign Out</span>
+                    </button>
                   </div>
                 </div>
               </div>
@@ -354,7 +310,6 @@ export default function Dashboard() {
           <div className="h-full flex flex-col p-4">
             {/* Navigation */}
             <nav className="flex-1 space-y-2 mt-4">
-              <NavigationItem icon={Home} label="Overview" tab="upload" />
               <NavigationItem icon={Upload} label="Upload Data" tab="upload" />
               <NavigationItem 
                 icon={Users} 
@@ -363,49 +318,7 @@ export default function Dashboard() {
                 badge={stats.highRisk}
               />
               <NavigationItem icon={BarChart3} label="Analytics" tab="analytics" />
-              <NavigationItem icon={Activity} label="Activity Log" tab="analytics" />
-              <NavigationItem icon={Shield} label="Risk Rules" tab="analytics" />
-              <NavigationItem icon={PieChart} label="Reports" tab="analytics" />
             </nav>
-
-            {/* Quick Stats */}
-            <div className={`
-              mt-6 p-4 rounded-xl bg-gradient-to-br from-slate-800/30 to-slate-900/30 
-              border border-slate-800/50 transition-all duration-300
-              ${sidebarOpen ? 'opacity-100' : 'opacity-0 lg:opacity-0'}
-            `}>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-medium text-slate-400">Quick Stats</span>
-                <Activity className="w-4 h-4 text-blue-400" />
-              </div>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-slate-500">High Risk</span>
-                  <span className="text-xs font-semibold text-red-400">{stats.highRisk}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-slate-500">Outstanding</span>
-                  <span className="text-xs font-semibold text-emerald-400">
-                    ${(stats.totalOutstanding / 1000).toFixed(0)}K
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Help Card */}
-            <div className={`
-              mt-4 p-4 rounded-xl bg-gradient-to-br from-blue-500/5 to-cyan-500/5 
-              border border-blue-500/20 transition-all duration-300
-              ${sidebarOpen ? 'opacity-100' : 'opacity-0 lg:opacity-0'}
-            `}>
-              <div className="flex items-center space-x-3">
-                <HelpCircle className="w-5 h-5 text-blue-400" />
-                <div>
-                  <p className="text-xs font-medium text-white">Need help?</p>
-                  <p className="text-xs text-slate-400">Check our guides</p>
-                </div>
-              </div>
-            </div>
           </div>
         </aside>
 
@@ -417,7 +330,8 @@ export default function Dashboard() {
               title="Total Customers"
               value={stats.totalCustomers}
               icon={Users}
-              color="text-blue-400"
+              gradient="from-[#4d7c8a]/20 to-[#7f9c96]/10"
+              iconColor="bg-gradient-to-br from-[#4d7c8a] to-[#7f9c96]"
               trend="+12%"
               subtitle="Active: 82%"
             />
@@ -425,7 +339,8 @@ export default function Dashboard() {
               title="High Risk"
               value={stats.highRisk}
               icon={AlertCircle}
-              color="text-red-400"
+              gradient="from-red-500/20 to-rose-500/10"
+              iconColor="bg-gradient-to-br from-red-500 to-rose-500"
               trend="+3"
               subtitle="Require attention"
             />
@@ -433,7 +348,8 @@ export default function Dashboard() {
               title="Total Outstanding"
               value={`$${(stats.totalOutstanding / 1000).toFixed(0)}K`}
               icon={DollarSign}
-              color="text-emerald-400"
+              gradient="from-[#8fad88]/20 to-[#cbdf90]/10"
+              iconColor="bg-gradient-to-br from-[#8fad88] to-[#cbdf90]"
               trend="+5.2%"
               subtitle="Across all customers"
             />
@@ -441,7 +357,8 @@ export default function Dashboard() {
               title="Avg Risk Score"
               value={stats.avgRiskScore.toFixed(1)}
               icon={TrendingUp}
-              color="text-amber-400"
+              gradient="from-amber-500/20 to-orange-500/10"
+              iconColor="bg-gradient-to-br from-amber-500 to-orange-500"
               trend="-2.1"
               subtitle="Improving"
             />
@@ -449,10 +366,10 @@ export default function Dashboard() {
 
           {/* Secondary Stats */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/30 backdrop-blur-sm rounded-2xl border border-slate-700/30 p-5">
+            <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/30 backdrop-blur-sm rounded-2xl border border-slate-700/30 p-5 hover:border-[#8fad88]/30 transition-all">
               <div className="flex items-center space-x-3">
-                <div className="p-2 rounded-xl bg-green-500/10">
-                  <CheckCircle className="w-5 h-5 text-green-400" />
+                <div className="p-2 rounded-xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20">
+                  <CheckCircle className="w-5 h-5 text-emerald-400" />
                 </div>
                 <div>
                   <p className="text-sm text-slate-400">Active Customers</p>
@@ -460,10 +377,10 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
-            <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/30 backdrop-blur-sm rounded-2xl border border-slate-700/30 p-5">
+            <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/30 backdrop-blur-sm rounded-2xl border border-slate-700/30 p-5 hover:border-[#4d7c8a]/30 transition-all">
               <div className="flex items-center space-x-3">
-                <div className="p-2 rounded-xl bg-blue-500/10">
-                  <Calendar className="w-5 h-5 text-blue-400" />
+                <div className="p-2 rounded-xl bg-gradient-to-br from-[#4d7c8a]/20 to-[#7f9c96]/20">
+                  <Calendar className="w-5 h-5 text-[#7f9c96]" />
                 </div>
                 <div>
                   <p className="text-sm text-slate-400">New This Month</p>
@@ -471,9 +388,9 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
-            <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/30 backdrop-blur-sm rounded-2xl border border-slate-700/30 p-5">
+            <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/30 backdrop-blur-sm rounded-2xl border border-slate-700/30 p-5 hover:border-purple-500/30 transition-all">
               <div className="flex items-center space-x-3">
-                <div className="p-2 rounded-xl bg-purple-500/10">
+                <div className="p-2 rounded-xl bg-gradient-to-br from-purple-500/20 to-violet-500/20">
                   <Clock className="w-5 h-5 text-purple-400" />
                 </div>
                 <div>
@@ -486,99 +403,14 @@ export default function Dashboard() {
 
           {/* Content Area */}
           <div className="bg-gradient-to-br from-slate-900/40 to-slate-950/40 backdrop-blur-xl rounded-3xl border border-slate-800/50 overflow-hidden">
-            {/* Tab Header */}
-            <div className="border-b border-slate-800/50">
-              <div className="flex flex-col md:flex-row md:items-center justify-between p-6">
-                <div>
-                  <h2 className="text-2xl font-bold bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">
-                    {activeTab === 'upload' && 'Upload & Process Data'}
-                    {activeTab === 'customers' && 'Customer Management'}
-                    {activeTab === 'analytics' && 'Analytics & Insights'}
-                  </h2>
-                  <p className="text-slate-500 text-sm mt-1">
-                    {activeTab === 'upload' && 'Upload CSV files and process customer data'}
-                    {activeTab === 'customers' && 'Manage and monitor customer risk profiles'}
-                    {activeTab === 'analytics' && 'Deep dive into risk analytics and trends'}
-                  </p>
-                </div>
-                <div className="flex items-center space-x-3 mt-4 md:mt-0">
-                  <button className="px-4 py-2 bg-slate-800/50 hover:bg-slate-700/50 text-slate-300 rounded-xl text-sm font-medium transition-colors flex items-center space-x-2">
-                    <Download className="w-4 h-4" />
-                    <span>Export</span>
-                  </button>
-                  <button className="px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-400 text-white rounded-xl text-sm font-medium transition-all hover:shadow-lg hover:shadow-blue-500/25 flex items-center space-x-2">
-                    <Filter className="w-4 h-4" />
-                    <span>Filter</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-
             {/* Content */}
             <div className="p-6">
-              {activeTab === 'upload' && (
-                <div className="space-y-6">
-                  <FileUpload onUploadComplete={loadCustomers} />
-                  
-                  {/* Recent Activity */}
-                  <div className="mt-8">
-                    <h3 className="text-lg font-semibold text-white mb-4">Recent Activity</h3>
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                      {recentCustomers.map((customer) => (
-                        <div key={customer.id} className="p-4 rounded-xl bg-slate-800/30 border border-slate-700/30 hover:border-slate-600/50 transition-all">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-3">
-                              <div className={`p-2 rounded-lg ${getRiskBgColor(customer.risk_score)}`}>
-                                <User className="w-4 h-4" />
-                              </div>
-                              <div>
-                                <p className="font-medium text-white">{customer.name}</p>
-                                <p className="text-sm text-slate-500">{customer.company}</p>
-                              </div>
-                            </div>
-                            <div className="text-right">
-                              <p className={`text-lg font-bold ${getRiskColor(customer.risk_score)}`}>
-                                {customer.risk_score}
-                              </p>
-                              <p className="text-xs text-slate-500">Risk Score</p>
-                            </div>
-                          </div>
-                          <div className="flex items-center justify-between mt-4 text-sm">
-                            <div className="flex items-center space-x-4">
-                              <span className="text-slate-400 flex items-center">
-                                <DollarSign className="w-3 h-3 mr-1" />
-                                ${Number(customer.outstanding_amount).toLocaleString()}
-                              </span>
-                              <span className="text-slate-400 flex items-center">
-                                <Calendar className="w-3 h-3 mr-1" />
-                                30 days
-                              </span>
-                            </div>
-                            <button className="text-blue-400 hover:text-blue-300 text-sm font-medium">
-                              View Details →
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-              
+              {activeTab === 'upload' && <FileUpload onUploadComplete={loadCustomers} />}
               {activeTab === 'customers' && (
                 <CustomerList customers={customers} loading={loading} onRefresh={loadCustomers} />
               )}
-              
-              {activeTab === 'analytics' && (
-                <Analytics customers={customers} />
-              )}
+              {activeTab === 'analytics' && <Analytics customers={customers} />}
             </div>
-          </div>
-
-          {/* Bottom Info */}
-          <div className="mt-6 text-center text-sm text-slate-500">
-            <p>Payment Pulse Dashboard v2.0 • Last updated: Today, 14:30</p>
-            <p className="text-xs mt-1">Need assistance? Contact support@paymentpulse.com</p>
           </div>
         </main>
       </div>

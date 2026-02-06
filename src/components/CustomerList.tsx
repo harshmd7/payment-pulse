@@ -4,14 +4,11 @@ import {
   Search,
   Brain,
   TrendingUp,
-  AlertCircle,
   Phone,
   Mail,
   DollarSign,
   Calendar,
   Loader,
-  CheckCircle,
-  XCircle,
 } from 'lucide-react';
 import CustomerAnalysis from './CustomerAnalysis';
 
@@ -40,8 +37,8 @@ export default function CustomerList({ customers, loading, onRefresh }: Customer
 
   const getRiskColor = (score: number) => {
     if (score >= 70) return 'text-red-400 bg-red-500/10 border-red-500/20';
-    if (score >= 40) return 'text-amber-400 bg-amber-500/10 border-amber-500/20';
-    return 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20';
+    if (score >= 40) return 'text-[#cbdf90] bg-[#cbdf90]/10 border-[#cbdf90]/20';
+    return 'text-[#8fad88] bg-[#8fad88]/10 border-[#8fad88]/20';
   };
 
   const getRiskLabel = (score: number) => {
@@ -58,7 +55,7 @@ export default function CustomerList({ customers, loading, onRefresh }: Customer
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader className="w-8 h-8 text-blue-400 animate-spin" />
+        <Loader className="w-8 h-8 text-[#4d7c8a] animate-spin" />
       </div>
     );
   }
@@ -73,14 +70,14 @@ export default function CustomerList({ customers, loading, onRefresh }: Customer
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search customers..."
-            className="w-full pl-11 pr-4 py-3 bg-slate-900/50 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full pl-11 pr-4 py-3 bg-slate-900/50 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#4d7c8a] focus:border-transparent"
           />
         </div>
 
         <select
           value={filterStatus}
           onChange={(e) => setFilterStatus(e.target.value)}
-          className="px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#4d7c8a] focus:border-transparent"
         >
           <option value="all">All Status</option>
           <option value="high_risk">High Risk</option>
@@ -99,7 +96,7 @@ export default function CustomerList({ customers, loading, onRefresh }: Customer
         ) : (
           filteredCustomers.map((customer) => (
             <div key={customer.id}>
-              <div className="bg-slate-900/50 rounded-xl border border-slate-700 p-6 hover:border-blue-500/50 transition-all">
+              <div className="bg-slate-900/50 rounded-xl border border-slate-700 p-6 hover:border-[#4d7c8a]/50 transition-all">
               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                 <div className="flex-1 space-y-3">
                   <div className="flex items-start justify-between">
@@ -131,7 +128,7 @@ export default function CustomerList({ customers, loading, onRefresh }: Customer
 
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                     <div className="flex items-center space-x-2">
-                      <DollarSign className="w-4 h-4 text-emerald-400" />
+                      <DollarSign className="w-4 h-4 text-[#8fad88]" />
                       <div>
                         <p className="text-xs text-slate-400">Outstanding</p>
                         <p className="text-white font-semibold">
@@ -140,14 +137,14 @@ export default function CustomerList({ customers, loading, onRefresh }: Customer
                       </div>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <Calendar className="w-4 h-4 text-amber-400" />
+                      <Calendar className="w-4 h-4 text-[#cbdf90]" />
                       <div>
                         <p className="text-xs text-slate-400">Days Overdue</p>
                         <p className="text-white font-semibold">{customer.days_overdue}</p>
                       </div>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <TrendingUp className="w-4 h-4 text-blue-400" />
+                      <TrendingUp className="w-4 h-4 text-[#4d7c8a]" />
                       <div>
                         <p className="text-xs text-slate-400">Status</p>
                         <p className="text-white font-semibold capitalize">
@@ -161,7 +158,7 @@ export default function CustomerList({ customers, loading, onRefresh }: Customer
                 <div className="flex flex-col gap-2">
                   <button
                     onClick={() => handleAnalyzeCustomer(customer)}
-                    className="px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white rounded-lg font-semibold transition-all duration-300 flex items-center justify-center space-x-2 whitespace-nowrap"
+                    className="px-6 py-3 bg-gradient-to-r from-[#1b4079] to-[#4d7c8a] hover:from-[#1b4079]/90 hover:to-[#4d7c8a]/90 text-white rounded-lg font-semibold transition-all duration-300 flex items-center justify-center space-x-2 whitespace-nowrap"
                   >
                     <Brain className="w-5 h-5" />
                     <span>AI Analysis</span>
