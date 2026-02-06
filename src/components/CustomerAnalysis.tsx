@@ -3,10 +3,10 @@ import { Customer, supabase } from '../lib/supabase';
 import { 
   X, Brain, Loader, AlertCircle, CheckCircle, Phone, Mail, MessageCircle,
   Crown, Gem, ShieldCheck, Trophy, Scroll, Castle, Diamond, Zap,
-  TrendingUp, Target, LineChart, Activity, BarChart3
+  TrendingUp, Target, LineChart, Activity, BarChart3, Sparkles
 } from 'lucide-react';
 
-// Royal color palette
+// Royal color palette - matching landing page
 const COLORS = {
   primary: '#1b4079',    // Royal Blue
   secondary: '#4d7c8a',  // Steel Blue
@@ -209,8 +209,8 @@ export default function CustomerAnalysis({ customer, onClose, inline = false }: 
     : 'fixed inset-0 bg-black/50 z-50 flex items-start justify-center p-4 backdrop-blur-sm';
 
   const modalClass = inline
-    ? 'bg-gradient-to-br from-white to-gray-50 rounded-2xl border w-full overflow-y-auto shadow-2xl'
-    : 'bg-gradient-to-br from-white to-gray-50 rounded-2xl border max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl';
+    ? 'bg-gradient-to-br from-white to-gray-50 rounded-2xl border w-full overflow-y-auto shadow-2xl font-serif'
+    : 'bg-gradient-to-br from-white to-gray-50 rounded-2xl border max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl font-serif';
 
   const getRiskColor = (score: number) => {
     if (score >= 70) return COLORS.danger;
@@ -232,37 +232,39 @@ export default function CustomerAnalysis({ customer, onClose, inline = false }: 
       <div 
         className={modalClass}
         style={{ 
-          borderColor: `${COLORS.primary}30`,
+          borderColor: `${COLORS.gold}30`,
         }}
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Header */}
         <div 
-          className="sticky top-0 backdrop-blur-xl border-b p-6 flex items-center justify-between"
+          className="sticky top-0 backdrop-blur-xl border-b p-6 flex items-center justify-between z-10"
           style={{ 
             background: `linear-gradient(135deg, ${COLORS.primary}15, ${COLORS.secondary}15)`,
-            borderColor: `${COLORS.primary}20`,
+            borderColor: `${COLORS.gold}20`,
           }}
         >
           <div className="flex items-center space-x-3">
             <div 
-              className="w-10 h-10 rounded-lg flex items-center justify-center shadow-lg"
+              className="w-12 h-12 rounded-xl flex items-center justify-center shadow-lg transition-transform duration-300 hover:scale-110"
               style={{ 
                 background: `linear-gradient(135deg, ${COLORS.primary}, ${COLORS.secondary})`,
-                boxShadow: `0 4px 20px ${COLORS.primary}30`,
+                boxShadow: `0 8px 32px ${COLORS.primary}40`,
               }}
             >
-              <Brain className="w-6 h-6 text-white" />
+              <Crown className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold" style={{ color: COLORS.primary }}>
+              <h2 className="text-2xl font-bold flex items-center gap-2" style={{ color: COLORS.primary }}>
                 Royal AI Analysis
+                <Sparkles className="w-5 h-5" style={{ color: COLORS.gold }} />
               </h2>
               <p className="text-sm" style={{ color: COLORS.secondary }}>{customer.name}</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+            className="p-2 rounded-lg hover:bg-white/50 transition-all duration-300 hover:scale-110"
             style={{ color: COLORS.primary }}
           >
             <X className="w-6 h-6" />
@@ -272,38 +274,44 @@ export default function CustomerAnalysis({ customer, onClose, inline = false }: 
         <div className="p-6 space-y-6">
           {/* Customer Summary Card */}
           <div 
-            className="p-6 rounded-2xl border"
+            className="p-6 rounded-2xl border transition-all duration-300 hover:shadow-lg"
             style={{ 
-              background: `linear-gradient(135deg, ${COLORS.primary}10, ${COLORS.secondary}10)`,
-              borderColor: `${COLORS.primary}20`,
+              background: `linear-gradient(135deg, ${COLORS.gold}10, ${COLORS.lightGold}10)`,
+              borderColor: `${COLORS.gold}30`,
             }}
           >
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="text-center">
-                <p className="text-sm" style={{ color: COLORS.secondary }}>Risk Score</p>
-                <p className="text-2xl font-bold" style={{ color: getRiskColor(customer.risk_score) }}>
+              <div className="text-center p-3 rounded-lg" style={{ backgroundColor: 'white' }}>
+                <p className="text-sm mb-1" style={{ color: COLORS.secondary }}>Risk Score</p>
+                <p className="text-3xl font-bold" style={{ color: getRiskColor(customer.risk_score) }}>
                   {customer.risk_score}
                 </p>
               </div>
-              <div className="text-center">
-                <p className="text-sm" style={{ color: COLORS.secondary }}>Outstanding</p>
+              <div className="text-center p-3 rounded-lg" style={{ backgroundColor: 'white' }}>
+                <p className="text-sm mb-1" style={{ color: COLORS.secondary }}>Outstanding</p>
                 <p className="text-2xl font-bold" style={{ color: COLORS.dark }}>
-                  ${Number(customer.outstanding_amount).toLocaleString()}
+                  ₹{Number(customer.outstanding_amount).toLocaleString()}
                 </p>
               </div>
-              <div className="text-center">
-                <p className="text-sm" style={{ color: COLORS.secondary }}>Days Overdue</p>
-                <p className="text-2xl font-bold" style={{ color: COLORS.dark }}>
+              <div className="text-center p-3 rounded-lg" style={{ backgroundColor: 'white' }}>
+                <p className="text-sm mb-1" style={{ color: COLORS.secondary }}>Days Overdue</p>
+                <p className="text-3xl font-bold" style={{ color: COLORS.dark }}>
                   {customer.days_overdue}
                 </p>
               </div>
-              <div className="text-center">
-                <p className="text-sm" style={{ color: COLORS.secondary }}>Status</p>
-                <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
-                  customer.risk_score >= 70 ? 'bg-red-100 text-red-800' :
-                  customer.risk_score >= 40 ? 'bg-yellow-100 text-yellow-800' :
-                  'bg-green-100 text-green-800'
-                }`}>
+              <div className="text-center p-3 rounded-lg" style={{ backgroundColor: 'white' }}>
+                <p className="text-sm mb-1" style={{ color: COLORS.secondary }}>Status</p>
+                <span 
+                  className="inline-block px-3 py-1 rounded-full text-xs font-semibold"
+                  style={{
+                    backgroundColor: customer.risk_score >= 70 ? `${COLORS.danger}20` :
+                                   customer.risk_score >= 40 ? `${COLORS.warning}20` : `${COLORS.success}20`,
+                    color: customer.risk_score >= 70 ? COLORS.danger :
+                          customer.risk_score >= 40 ? COLORS.warning : COLORS.success,
+                    border: `1px solid ${customer.risk_score >= 70 ? COLORS.danger :
+                                       customer.risk_score >= 40 ? COLORS.warning : COLORS.success}30`
+                  }}
+                >
                   {customer.risk_score >= 70 ? 'High Risk' : customer.risk_score >= 40 ? 'Medium Risk' : 'Low Risk'}
                 </span>
               </div>
@@ -312,9 +320,9 @@ export default function CustomerAnalysis({ customer, onClose, inline = false }: 
 
           {analyzing && (
             <div className="flex flex-col items-center justify-center py-12">
-              <Loader className="w-12 h-12 animate-spin mb-4" style={{ color: COLORS.primary }} />
-              <p className="font-semibold" style={{ color: COLORS.dark }}>Analyzing customer data...</p>
-              <p className="text-sm mt-1" style={{ color: COLORS.secondary }}>Running AI models and risk assessment</p>
+              <Loader className="w-12 h-12 animate-spin mb-4" style={{ color: COLORS.gold }} />
+              <p className="font-semibold text-lg" style={{ color: COLORS.dark }}>Analyzing customer data...</p>
+              <p className="text-sm mt-1" style={{ color: COLORS.secondary }}>Running Royal AI models and risk assessment</p>
             </div>
           )}
 
@@ -336,7 +344,7 @@ export default function CustomerAnalysis({ customer, onClose, inline = false }: 
             <div className="space-y-6">
               {/* AI Insights Section */}
               <div 
-                className="rounded-2xl border p-6"
+                className="rounded-2xl border p-6 transition-all duration-300 hover:shadow-lg"
                 style={{ 
                   background: `linear-gradient(135deg, ${COLORS.primary}10, ${COLORS.secondary}10)`,
                   borderColor: `${COLORS.primary}30`,
@@ -344,11 +352,11 @@ export default function CustomerAnalysis({ customer, onClose, inline = false }: 
               >
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-xl font-bold flex items-center gap-2" style={{ color: COLORS.primary }}>
-                    <Brain className="w-5 h-5" />
+                    <Diamond className="w-5 h-5" style={{ color: COLORS.gold }} />
                     Royal AI Insights
                   </h3>
                   <span 
-                    className="px-3 py-1 text-sm font-semibold rounded-full"
+                    className="px-3 py-1.5 text-sm font-semibold rounded-full"
                     style={{ 
                       backgroundColor: `${COLORS.gold}20`,
                       color: COLORS.gold,
@@ -358,7 +366,7 @@ export default function CustomerAnalysis({ customer, onClose, inline = false }: 
                     Confidence: {analysis.confidence_score}%
                   </span>
                 </div>
-                <p className="mb-4 leading-relaxed" style={{ color: COLORS.dark }}>
+                <p className="mb-4 leading-relaxed text-lg" style={{ color: COLORS.dark }}>
                   {analysis.ai_insights.summary}
                 </p>
                 <div className="space-y-2">
@@ -370,13 +378,13 @@ export default function CustomerAnalysis({ customer, onClose, inline = false }: 
                   ))}
                 </div>
                 <div className="grid grid-cols-2 gap-4 mt-4 pt-4 border-t" style={{ borderColor: `${COLORS.primary}20` }}>
-                  <div>
+                  <div className="p-3 rounded-lg" style={{ backgroundColor: 'white' }}>
                     <p className="text-xs mb-1" style={{ color: COLORS.secondary }}>Emotional State</p>
                     <p className="text-sm font-semibold" style={{ color: COLORS.dark }}>
                       {analysis.ai_insights.emotional_indicators}
                     </p>
                   </div>
-                  <div>
+                  <div className="p-3 rounded-lg" style={{ backgroundColor: 'white' }}>
                     <p className="text-xs mb-1" style={{ color: COLORS.secondary }}>Engagement Level</p>
                     <p className="text-sm font-semibold" style={{ color: COLORS.dark }}>
                       {analysis.ai_insights.engagement_readiness}
@@ -387,24 +395,24 @@ export default function CustomerAnalysis({ customer, onClose, inline = false }: 
 
               {/* Risk Assessment Section */}
               <div 
-                className="rounded-2xl border p-6"
+                className="rounded-2xl border p-6 transition-all duration-300 hover:shadow-lg"
                 style={{ 
                   background: `linear-gradient(135deg, ${COLORS.accent1}10, ${COLORS.accent2}10)`,
                   borderColor: `${COLORS.accent1}30`,
                 }}
               >
                 <h3 className="text-xl font-bold flex items-center gap-2 mb-4" style={{ color: COLORS.dark }}>
-                  <ShieldCheck className="w-5 h-5" />
+                  <ShieldCheck className="w-5 h-5" style={{ color: COLORS.accent2 }} />
                   Risk Assessment
                 </h3>
                 <div className="grid grid-cols-2 gap-4 mb-6">
-                  <div className="p-4 rounded-lg" style={{ backgroundColor: 'white', border: `1px solid ${COLORS.success}20` }}>
+                  <div className="p-4 rounded-xl" style={{ backgroundColor: 'white', border: `1px solid ${COLORS.success}20` }}>
                     <p className="text-sm mb-1" style={{ color: COLORS.secondary }}>Recovery Probability</p>
                     <p className="text-2xl font-bold" style={{ color: COLORS.success }}>
                       {analysis.risk_assessment.probability_of_recovery}
                     </p>
                   </div>
-                  <div className="p-4 rounded-lg" style={{ backgroundColor: 'white', border: `1px solid ${COLORS.primary}20` }}>
+                  <div className="p-4 rounded-xl" style={{ backgroundColor: 'white', border: `1px solid ${COLORS.primary}20` }}>
                     <p className="text-sm mb-1" style={{ color: COLORS.secondary }}>Expected Timeline</p>
                     <p className="text-2xl font-bold" style={{ color: COLORS.primary }}>
                       {analysis.risk_assessment.expected_recovery_time}
@@ -420,7 +428,7 @@ export default function CustomerAnalysis({ customer, onClose, inline = false }: 
                       </div>
                       <div className="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden">
                         <div
-                          className="h-2.5 rounded-full"
+                          className="h-2.5 rounded-full transition-all duration-500"
                           style={{ 
                             width: `${factor.score}%`,
                             backgroundColor: getRiskColor(factor.score)
@@ -437,21 +445,22 @@ export default function CustomerAnalysis({ customer, onClose, inline = false }: 
 
               {/* Recommended Actions Section */}
               <div 
-                className="rounded-2xl border p-6"
+                className="rounded-2xl border p-6 transition-all duration-300 hover:shadow-lg"
                 style={{ 
                   background: `linear-gradient(135deg, ${COLORS.gold}10, ${COLORS.lightGold}10)`,
                   borderColor: `${COLORS.gold}30`,
                 }}
               >
                 <h3 className="text-xl font-bold flex items-center gap-2 mb-4" style={{ color: COLORS.dark }}>
-                  <Target className="w-5 h-5" />
+                  <Trophy className="w-5 h-5" style={{ color: COLORS.gold }} />
                   Recommended Royal Actions
                 </h3>
                 <div className="space-y-4">
                   {analysis.recommended_actions.map((action: any, index: number) => (
                     <div
                       key={index}
-                      className="p-4 rounded-lg border hover:border-gray-300 transition-all bg-white"
+                      className="p-4 rounded-xl border hover:border-opacity-60 transition-all bg-white hover:shadow-md"
+                      style={{ borderColor: `${COLORS.gold}20` }}
                     >
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex items-center space-x-2">
@@ -478,14 +487,14 @@ export default function CustomerAnalysis({ customer, onClose, inline = false }: 
                       <div className="grid grid-cols-2 gap-3 mb-3">
                         <div>
                           <p className="text-xs" style={{ color: COLORS.secondary }}>Channel</p>
-                          <p className="text-sm" style={{ color: COLORS.dark }}>{action.channel}</p>
+                          <p className="text-sm font-medium" style={{ color: COLORS.dark }}>{action.channel}</p>
                         </div>
                         <div>
                           <p className="text-xs" style={{ color: COLORS.secondary }}>Timing</p>
-                          <p className="text-sm" style={{ color: COLORS.dark }}>{action.timing}</p>
+                          <p className="text-sm font-medium" style={{ color: COLORS.dark }}>{action.timing}</p>
                         </div>
                       </div>
-                      <div className="p-3 rounded border" style={{ borderColor: `${COLORS.primary}10`, backgroundColor: `${COLORS.primary}5` }}>
+                      <div className="p-3 rounded-lg border" style={{ borderColor: `${COLORS.primary}10`, backgroundColor: `${COLORS.primary}5` }}>
                         <p className="text-xs mb-1" style={{ color: COLORS.secondary }}>Suggested Approach:</p>
                         <p className="text-sm" style={{ color: COLORS.dark }}>{action.script}</p>
                       </div>
@@ -497,20 +506,21 @@ export default function CustomerAnalysis({ customer, onClose, inline = false }: 
           )}
         </div>
 
+        {/* Footer */}
         <div 
           className="sticky bottom-0 backdrop-blur-xl border-t p-6"
           style={{ 
             background: `linear-gradient(135deg, ${COLORS.primary}15, ${COLORS.secondary}15)`,
-            borderColor: `${COLORS.primary}20`,
+            borderColor: `${COLORS.gold}20`,
           }}
         >
           <button
             onClick={onClose}
-            className="w-full py-3 rounded-lg font-semibold transition-all transform hover:scale-[1.02] shadow-lg"
+            className="w-full py-3 rounded-xl font-semibold transition-all transform hover:scale-[1.02] shadow-lg"
             style={{ 
               background: `linear-gradient(135deg, ${COLORS.primary}, ${COLORS.secondary})`,
               color: 'white',
-              boxShadow: `0 4px 20px ${COLORS.primary}30`,
+              boxShadow: `0 8px 32px ${COLORS.primary}40`,
             }}
           >
             Close Royal Analysis

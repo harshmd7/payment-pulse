@@ -6,11 +6,29 @@ import {
   TrendingUp,
   Phone,
   Mail,
-  DollarSign,
   Calendar,
   Loader,
+  Target,
+  Crown,
+  Sparkles,
 } from 'lucide-react';
 import CustomerAnalysis from './CustomerAnalysis';
+
+// Royal color palette
+const COLORS = {
+  primary: '#1b4079',
+  secondary: '#4d7c8a',
+  accent1: '#7f9c96',
+  accent2: '#8fad88',
+  accent3: '#cbdf90',
+  gold: '#d4af37',
+  lightGold: '#f4e4a6',
+  dark: '#0a1931',
+  light: '#f8f9fa',
+  success: '#10b981',
+  warning: '#f59e0b',
+  danger: '#ef4444',
+};
 
 interface CustomerListProps {
   customers: Customer[];
@@ -36,9 +54,9 @@ export default function CustomerList({ customers, loading, onRefresh }: Customer
   });
 
   const getRiskColor = (score: number) => {
-    if (score >= 70) return 'text-red-400 bg-red-500/10 border-red-500/20';
-    if (score >= 40) return 'text-[#cbdf90] bg-[#cbdf90]/10 border-[#cbdf90]/20';
-    return 'text-[#8fad88] bg-[#8fad88]/10 border-[#8fad88]/20';
+    if (score >= 70) return COLORS.danger;
+    if (score >= 40) return COLORS.warning;
+    return COLORS.success;
   };
 
   const getRiskLabel = (score: number) => {
@@ -54,30 +72,42 @@ export default function CustomerList({ customers, loading, onRefresh }: Customer
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <Loader className="w-8 h-8 text-[#4d7c8a] animate-spin" />
+      <div className="flex flex-col items-center justify-center py-12">
+        <Loader className="w-12 h-12 animate-spin mb-4" style={{ color: COLORS.gold }} />
+        <p className="font-semibold" style={{ color: COLORS.dark }}>Loading royal customers...</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 font-serif">
+      {/* Search and Filter */}
       <div className="flex flex-col md:flex-row gap-4">
         <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
+          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5" style={{ color: COLORS.secondary }} />
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search customers..."
-            className="w-full pl-11 pr-4 py-3 bg-slate-900/50 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#4d7c8a] focus:border-transparent"
+            className="w-full pl-12 pr-4 py-3 rounded-xl focus:outline-none transition-all duration-300"
+            style={{ 
+              backgroundColor: `${COLORS.primary}10`,
+              border: `1px solid ${COLORS.primary}20`,
+              color: COLORS.dark,
+            }}
           />
         </div>
 
         <select
           value={filterStatus}
           onChange={(e) => setFilterStatus(e.target.value)}
-          className="px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#4d7c8a] focus:border-transparent"
+          className="px-6 py-3 rounded-xl focus:outline-none transition-all duration-300"
+          style={{ 
+            backgroundColor: `${COLORS.primary}10`,
+            border: `1px solid ${COLORS.primary}20`,
+            color: COLORS.dark,
+          }}
         >
           <option value="all">All Status</option>
           <option value="high_risk">High Risk</option>
@@ -88,104 +118,138 @@ export default function CustomerList({ customers, loading, onRefresh }: Customer
         </select>
       </div>
 
+      {/* Customer Cards */}
       <div className="space-y-4">
         {filteredCustomers.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-slate-400">No customers found. Upload a CSV file to get started.</p>
+          <div 
+            className="text-center py-12 rounded-2xl border"
+            style={{ 
+              backgroundColor: `${COLORS.primary}5`,
+              borderColor: `${COLORS.primary}20`,
+            }}
+          >
+            <Crown className="w-16 h-16 mx-auto mb-4" style={{ color: COLORS.gold, opacity: 0.5 }} />
+            <p style={{ color: COLORS.secondary }}>No customers found. Upload a CSV file to get started.</p>
           </div>
         ) : (
           filteredCustomers.map((customer) => (
             <div key={customer.id}>
-              <div className="bg-slate-900/50 rounded-xl border border-slate-700 p-6 hover:border-[#4d7c8a]/50 transition-all">
-              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                <div className="flex-1 space-y-3">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h3 className="text-xl font-semibold text-white mb-1">{customer.name}</h3>
-                      <div className="flex flex-wrap gap-3 text-sm text-slate-400">
-                        {customer.email && (
-                          <div className="flex items-center space-x-1">
-                            <Mail className="w-4 h-4" />
-                            <span>{customer.email}</span>
-                          </div>
-                        )}
-                        {customer.phone && (
-                          <div className="flex items-center space-x-1">
-                            <Phone className="w-4 h-4" />
-                            <span>{customer.phone}</span>
-                          </div>
-                        )}
+              <div 
+                className="rounded-2xl border p-6 transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
+                style={{ 
+                  backgroundColor: 'white',
+                  borderColor: `${COLORS.accent1}30`,
+                  boxShadow: `0 4px 20px ${COLORS.primary}10`,
+                }}
+              >
+                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                  <div className="flex-1 space-y-3">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <h3 className="text-xl font-semibold mb-1" style={{ color: COLORS.dark }}>
+                          {customer.name}
+                        </h3>
+                        <div className="flex flex-wrap gap-3 text-sm" style={{ color: COLORS.secondary }}>
+                          {customer.email && (
+                            <div className="flex items-center space-x-1">
+                              <Mail className="w-4 h-4" />
+                              <span>{customer.email}</span>
+                            </div>
+                          )}
+                          {customer.phone && (
+                            <div className="flex items-center space-x-1">
+                              <Phone className="w-4 h-4" />
+                              <span>{customer.phone}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div
+                        className="px-3 py-1 rounded-full text-sm font-semibold border"
+                        style={{
+                          backgroundColor: `${getRiskColor(customer.risk_score)}20`,
+                          borderColor: `${getRiskColor(customer.risk_score)}30`,
+                          color: getRiskColor(customer.risk_score),
+                        }}
+                      >
+                        {getRiskLabel(customer.risk_score)} ({customer.risk_score})
                       </div>
                     </div>
-                    <div
-                      className={`px-3 py-1 rounded-full text-sm font-semibold border ${getRiskColor(
-                        customer.risk_score
-                      )}`}
+
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                      <div 
+                        className="flex items-center space-x-2 p-3 rounded-lg"
+                        style={{ backgroundColor: `${COLORS.accent2}10` }}
+                      >
+                        <Target className="w-4 h-4" style={{ color: COLORS.accent2 }} />
+                        <div>
+                          <p className="text-xs" style={{ color: COLORS.secondary }}>Outstanding</p>
+                          <p className="font-semibold" style={{ color: COLORS.dark }}>
+                            ₹{Number(customer.outstanding_amount).toLocaleString()}
+                          </p>
+                        </div>
+                      </div>
+                      <div 
+                        className="flex items-center space-x-2 p-3 rounded-lg"
+                        style={{ backgroundColor: `${COLORS.accent3}10` }}
+                      >
+                        <Calendar className="w-4 h-4" style={{ color: COLORS.accent3 }} />
+                        <div>
+                          <p className="text-xs" style={{ color: COLORS.secondary }}>Days Overdue</p>
+                          <p className="font-semibold" style={{ color: COLORS.dark }}>
+                            {customer.days_overdue}
+                          </p>
+                        </div>
+                      </div>
+                      <div 
+                        className="flex items-center space-x-2 p-3 rounded-lg"
+                        style={{ backgroundColor: `${COLORS.secondary}10` }}
+                      >
+                        <TrendingUp className="w-4 h-4" style={{ color: COLORS.secondary }} />
+                        <div>
+                          <p className="text-xs" style={{ color: COLORS.secondary }}>Status</p>
+                          <p className="font-semibold capitalize" style={{ color: COLORS.dark }}>
+                            {customer.status.replace('_', ' ')}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    <button
+                      onClick={() => handleAnalyzeCustomer(customer)}
+                      className="px-6 py-3 rounded-xl font-semibold transition-all duration-300 hover:scale-105 hover:shadow-xl flex items-center justify-center space-x-2 whitespace-nowrap"
+                      style={{
+                        background: `linear-gradient(135deg, ${COLORS.primary}, ${COLORS.secondary})`,
+                        color: 'white',
+                        boxShadow: `0 4px 20px ${COLORS.primary}40`,
+                      }}
                     >
-                      {getRiskLabel(customer.risk_score)} ({customer.risk_score})
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    <div className="flex items-center space-x-2">
-                      <DollarSign className="w-4 h-4 text-[#8fad88]" />
-                      <div>
-                        <p className="text-xs text-slate-400">Outstanding</p>
-                        <p className="text-white font-semibold">
-                          ${Number(customer.outstanding_amount).toLocaleString()}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Calendar className="w-4 h-4 text-[#cbdf90]" />
-                      <div>
-                        <p className="text-xs text-slate-400">Days Overdue</p>
-                        <p className="text-white font-semibold">{customer.days_overdue}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <TrendingUp className="w-4 h-4 text-[#4d7c8a]" />
-                      <div>
-                        <p className="text-xs text-slate-400">Status</p>
-                        <p className="text-white font-semibold capitalize">
-                          {customer.status.replace('_', ' ')}
-                        </p>
-                      </div>
-                    </div>
+                      <Crown className="w-5 h-5" />
+                      <span>Royal AI Analysis</span>
+                    </button>
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-2">
-                  <button
-                    onClick={() => handleAnalyzeCustomer(customer)}
-                    className="px-6 py-3 bg-gradient-to-r from-[#1b4079] to-[#4d7c8a] hover:from-[#1b4079]/90 hover:to-[#4d7c8a]/90 text-white rounded-lg font-semibold transition-all duration-300 flex items-center justify-center space-x-2 whitespace-nowrap"
-                  >
-                    <Brain className="w-5 h-5" />
-                    <span>AI Analysis</span>
-                  </button>
-                </div>
+                {showAnalysis && selectedCustomer?.id === customer.id && (
+                  <div className="mt-4">
+                    <CustomerAnalysis
+                      customer={selectedCustomer}
+                      onClose={() => {
+                        setShowAnalysis(false);
+                        setSelectedCustomer(null);
+                        onRefresh();
+                      }}
+                      inline
+                    />
+                  </div>
+                )}
               </div>
-
-              {showAnalysis && selectedCustomer?.id === customer.id && (
-                <div className="mt-4">
-                  <CustomerAnalysis
-                    customer={selectedCustomer}
-                    onClose={() => {
-                      setShowAnalysis(false);
-                      setSelectedCustomer(null);
-                      onRefresh();
-                    }}
-                    inline
-                  />
-                </div>
-              )}
-            </div>
             </div>
           ))
         )}
       </div>
-
-      
     </div>
   );
 }
