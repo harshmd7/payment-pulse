@@ -25,6 +25,7 @@ import {
   Eye,
   EyeOff,
   UserPlus,
+  Sun, Moon,
 } from 'lucide-react';
 import FileUpload from './FileUpload';
 import CustomerList from './CustomerList';
@@ -34,12 +35,15 @@ import { generateCustomerPDF } from '../utils/pdfGenerator';
 
 const COLORS = {
   primary: '#1b4079',
-  secondary: '#4d7c8a',
-  accent1: '#7f9c96',
-  accent2: '#8fad88',
+  // Darken secondary for better contrast against light backgrounds
+  secondary: '#2f5668',
+  // Slightly deeper accents to remain visible on white
+  accent1: '#6f8f88',
+  accent2: '#7ea77a',
   accent3: '#cbdf90',
   dark: '#0a1931',
-  light: '#f8f9fa',
+  // Slightly warmer light background for better contrast with white elements
+  light: '#f3f6f9',
   success: '#10b981',
   warning: '#f59e0b',
   danger: '#ef4444',
@@ -56,6 +60,15 @@ interface Alert {
 
 export default function Dashboard() {
   const { user, signOut } = useAuth();
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  const toggleTheme = () => setIsDarkMode(v => !v);
+
+  const THEME = {
+    bg: isDarkMode ? COLORS.dark : COLORS.light,
+    text: isDarkMode ? '#e6eef8' : COLORS.dark,
+    muted: isDarkMode ? '#b8c5d0' : '#1b4079',
+    cardBg: isDarkMode ? COLORS.primary + '12' : 'white'
+  };
   const [activeTab, setActiveTab] = useState<'upload' | 'customers' | 'analytics' | 'add_customer'>('upload');
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
@@ -223,45 +236,45 @@ export default function Dashboard() {
         setActiveTab(tab);
         setTimeout(() => tabsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 120);
       }}
-      className={`w-full flex items-center p-4 rounded-2xl transition-all duration-300 group ${
-        activeTab === tab
-          ? 'bg-gradient-to-r from-[#1b4079] to-[#4d7c8a] text-white shadow-lg'
-          : 'text-gray-700 hover:bg-[#f1f5f9] hover:text-[#1b4079] border border-white/5'
-      }`}
+      className="w-full flex items-center p-4 rounded-2xl transition-all duration-300 group"
       style={{
+        background: activeTab === tab ? `linear-gradient(135deg, ${COLORS.primary}, ${COLORS.secondary})` : 'transparent',
+        color: activeTab === tab ? 'white' : (isDarkMode ? '#e6eef8' : COLORS.dark),
+        border: activeTab === tab ? 'none' : `1px solid ${COLORS.primary}20`,
         backdropFilter: 'blur(10px)',
+        boxShadow: activeTab === tab ? `0 8px 16px ${COLORS.primary}20` : 'none',
       }}
     >
-      <div className={`flex items-center justify-center w-12 h-12 rounded-xl mr-4 transition-all ${
-        activeTab === tab
-          ? 'bg-white/20'
-          : 'bg-white/5 group-hover:bg-white/10'
-      }`}>
-        <Icon className={`w-6 h-6 ${
-          activeTab === tab ? 'text-white' : 'text-gray-400 group-hover:text-white'
-        }`} />
+      <div className="flex items-center justify-center w-12 h-12 rounded-xl mr-4 transition-all"
+        style={{
+          backgroundColor: activeTab === tab ? 'rgba(255,255,255,0.2)' : `${COLORS.primary}15`,
+        }}>
+        <Icon className="w-6 h-6" style={{
+          color: activeTab === tab ? 'white' : COLORS.primary
+        }} />
       </div>
 
       {sidebarOpen && (
         <div className="flex-1 text-left">
           <div className="flex items-center justify-between">
-            <span className="font-semibold text-sm">{label}</span>
+            <span className="font-semibold text-base" style={{ color: activeTab === tab ? 'white' : (isDarkMode ? '#e6eef8' : COLORS.dark) }}>{label}</span>
             {badge && badge > 0 && (
-              <span className="px-2 py-1 text-xs rounded-full bg-red-500/30 text-red-200">
+              <span className="px-2 py-1 text-sm rounded-full bg-red-100 text-red-800 font-semibold">
                 {badge}
               </span>
             )}
           </div>
           {description && (
-            <p className="text-xs text-gray-400 mt-1">{description}</p>
+            <p className="text-sm mt-1" style={{ color: activeTab === tab ? 'rgba(255,255,255,0.8)' : (isDarkMode ? '#b8c5d0' : COLORS.secondary) }}>{description}</p>
           )}
         </div>
       )}
 
       {sidebarOpen && (
-        <ChevronRight className={`w-4 h-4 ml-2 transition-transform ${
-          activeTab === tab ? 'translate-x-1 text-white' : 'text-transparent group-hover:text-gray-400'
-        }`} />
+        <ChevronRight className="w-4 h-4 ml-2 transition-transform" style={{
+          color: activeTab === tab ? 'white' : 'transparent',
+          transform: activeTab === tab ? 'translateX(4px)' : 'translateX(0)',
+        }} />
       )}
     </button>
   );
@@ -316,30 +329,54 @@ export default function Dashboard() {
           </div>
 
           {trend && trendValue && (
-            <div className={`flex items-center px-3 py-1.5 rounded-full ${
-              trend === 'up' ? 'bg-emerald-500/20 text-emerald-400' :
-              trend === 'down' ? 'bg-red-500/20 text-red-400' :
-              'bg-gray-500/20 text-gray-400'
-            }`}>
-              {trend === 'up' ? <TrendingUpIcon className="w-3 h-3 mr-1" /> :
-               trend === 'down' ? <TrendingUpIcon className="w-3 h-3 mr-1 rotate-180" /> : null}
-              <span className="text-xs font-semibold">{trendValue}</span>
+            <div className={`flex items-center px-3 py-1.5 rounded-full ${trend === 'up' ? 'bg-emerald-100 text-emerald-800' :
+              trend === 'down' ? 'bg-red-100 text-red-800' :
+                'bg-gray-200 text-gray-800'
+              }`}>
+              {trend === 'up' ? <TrendingUpIcon className="w-4 h-4 mr-1" /> :
+                trend === 'down' ? <TrendingUpIcon className="w-4 h-4 mr-1 rotate-180" /> : null}
+              <span className="text-sm font-semibold">{trendValue}</span>
             </div>
           )}
         </div>
 
-        <div>
-          <p className="text-3xl font-bold mb-2" style={{ color: COLORS.dark }}>
-            {value}
-          </p>
-          <p className="text-sm font-semibold mb-1" style={{ color: COLORS.primary }}>
-            {title}
-          </p>
-          {subtitle && (
-            <p className="text-xs" style={{ color: COLORS.secondary }}>
-              {subtitle}
+        <div className="relative z-10">
+          <div className="flex items-start justify-between mb-6">
+            <div
+              className="p-3 rounded-xl"
+              style={{
+                backgroundColor: iconBg || `${color}20`,
+                border: `1px solid ${color}30`,
+              }}
+            >
+              <Icon className="w-6 h-6" style={{ color }} />
+            </div>
+
+            {trend && trendValue && (
+              <div className={`flex items-center px-3 py-1.5 rounded-full ${trend === 'up' ? 'bg-emerald-100 text-emerald-800' :
+                trend === 'down' ? 'bg-red-100 text-red-800' :
+                  'bg-gray-200 text-gray-800'
+                }`}>
+                {trend === 'up' ? <TrendingUpIcon className="w-4 h-4 mr-1" /> :
+                  trend === 'down' ? <TrendingUpIcon className="w-4 h-4 mr-1 rotate-180" /> : null}
+                <span className="text-sm font-semibold">{trendValue}</span>
+              </div>
+            )}
+          </div>
+
+          <div>
+            <p className="text-3xl font-bold mb-2" style={{ color: THEME.text }}>
+              {value}
             </p>
-          )}
+            <p className="text-base font-semibold mb-1" style={{ color: THEME.text }}>
+              {title}
+            </p>
+            {subtitle && (
+              <p className="text-sm" style={{ color: THEME.muted }}>
+                {subtitle}
+              </p>
+            )}
+          </div>
         </div>
       </div>
     </div>
@@ -481,8 +518,8 @@ export default function Dashboard() {
     <div
       className="min-h-screen overflow-hidden relative font-sans"
       style={{
-        backgroundColor: COLORS.light,
-        color: COLORS.dark,
+        backgroundColor: THEME.bg,
+        color: THEME.text,
       }}
     >
       {/* Background Pattern */}
@@ -505,7 +542,7 @@ export default function Dashboard() {
       <nav
         className="sticky top-0 z-50 backdrop-blur-xl border-b"
         style={{
-          backgroundColor: `${COLORS.primary}10`,
+          backgroundColor: isDarkMode ? `${COLORS.primary}20` : `${COLORS.primary}10`,
           borderColor: `${COLORS.primary}20`,
         }}
       >
@@ -523,7 +560,7 @@ export default function Dashboard() {
                 }}
               >
                 {sidebarOpen ? <X className="w-5 h-5" style={{ color: COLORS.primary }} /> :
-                              <Menu className="w-5 h-5" style={{ color: COLORS.primary }} />}
+                  <Menu className="w-5 h-5" style={{ color: COLORS.primary }} />}
               </button>
 
               <div className="flex items-center space-x-3">
@@ -543,7 +580,7 @@ export default function Dashboard() {
                   >
                     Payment Pulse
                   </span>
-                  <p className="text-xs" style={{ color: COLORS.secondary }}>
+                  <p className="text-sm" style={{ color: THEME.muted }}>
                     Customer Risk Analysis
                   </p>
                 </div>
@@ -606,7 +643,7 @@ export default function Dashboard() {
                     <div className="p-4 border-b" style={{ borderColor: `${COLORS.primary}20` }}>
                       <div className="flex items-center justify-between">
                         <h3 className="font-semibold" style={{ color: COLORS.primary }}>Alerts</h3>
-                        <span className="text-xs px-2 py-1 rounded-full" style={{ backgroundColor: `${COLORS.primary}15`, color: COLORS.primary }}>
+                        <span className="text-sm px-2 py-1 rounded-full" style={{ backgroundColor: `${COLORS.primary}15`, color: COLORS.primary }}>
                           {unreadCount} new
                         </span>
                       </div>
@@ -634,8 +671,8 @@ export default function Dashboard() {
                                 <AlertIcon className="w-4 h-4" style={{ color: alertColor }} />
                               </div>
                               <div className="flex-1">
-                                <p className="font-medium text-sm" style={{ color: COLORS.dark }}>{alert.message}</p>
-                                <p className="text-xs mt-1" style={{ color: COLORS.secondary }}>{alert.time}</p>
+                                <p className="font-medium text-base" style={{ color: COLORS.dark }}>{alert.message}</p>
+                                <p className="text-sm mt-1" style={{ color: COLORS.secondary }}>{alert.time}</p>
                               </div>
                               {alert.unread && (
                                 <div className="w-2 h-2 rounded-full bg-blue-500 mt-1"></div>
@@ -647,6 +684,22 @@ export default function Dashboard() {
                     </div>
                   </div>
                 )}
+              </div>
+
+              {/* Theme toggle */}
+              <div className="ml-2">
+                <button
+                  onClick={toggleTheme}
+                  className="p-2 rounded-xl transition-all hover:scale-105 flex items-center"
+                  title={isDarkMode ? 'Switch to light' : 'Switch to dark'}
+                  style={{
+                    backgroundColor: `${COLORS.primary}08`,
+                    border: `1px solid ${COLORS.primary}12`,
+                    color: THEME.text,
+                  }}
+                >
+                  {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                </button>
               </div>
 
               {/* User Profile */}
@@ -669,19 +722,21 @@ export default function Dashboard() {
                     </span>
                   </div>
                   <div className="hidden md:block text-left">
-                    <p className="text-sm font-semibold" style={{ color: COLORS.dark }}>
+                    <p className="text-sm font-semibold" style={{ color: THEME.text }}>
                       {user?.email?.split('@')[0] || 'Admin'}
                     </p>
-                    <p className="text-xs" style={{ color: COLORS.secondary }}>Admin</p>
+                    <p className="text-sm" style={{ color: THEME.muted }}>Admin</p>
                   </div>
                   <ChevronDown className="w-4 h-4" style={{ color: COLORS.secondary }} />
                 </button>
 
                 <div
-                  className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50"
+                  className="absolute right-0 mt-2 w-64 rounded-2xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200"
                   style={{
+                    backgroundColor: THEME.cardBg,
                     border: `1px solid ${COLORS.primary}20`,
                     backdropFilter: 'blur(20px)',
+                    zIndex: 9999,
                   }}
                 >
                   <div className="p-4 border-b" style={{ borderColor: `${COLORS.primary}20` }}>
@@ -697,20 +752,15 @@ export default function Dashboard() {
                         </span>
                       </div>
                       <div>
-                        <p className="font-semibold" style={{ color: COLORS.dark }}>
+                        <p className="font-semibold" style={{ color: THEME.text }}>
                           {user?.email?.split('@')[0] || 'Admin User'}
                         </p>
-                        <p className="text-xs" style={{ color: COLORS.secondary }}>{user?.email}</p>
+                        <p className="text-sm" style={{ color: THEME.muted }}>{user?.email}</p>
                       </div>
                     </div>
                   </div>
 
-                  <div className="p-2">
-                    <button className="w-full text-left px-3 py-2.5 rounded-lg hover:bg-gray-50/50 transition-colors flex items-center space-x-3">
-                      <User className="w-4 h-4" style={{ color: COLORS.primary }} />
-                      <span className="text-sm" style={{ color: COLORS.dark }}>Profile</span>
-                    </button>
-                  </div>
+                  {/* Profile removed per request */}
 
                   <div className="p-2 border-t" style={{ borderColor: `${COLORS.primary}20` }}>
                     <button
@@ -741,7 +791,7 @@ export default function Dashboard() {
           <div
             className="h-full flex flex-col p-6 border-r"
             style={{
-              backgroundColor: 'white',
+              backgroundColor: THEME.bg,
               borderColor: `${COLORS.primary}20`,
               backdropFilter: 'blur(20px)',
             }}
@@ -763,12 +813,12 @@ export default function Dashboard() {
                   </div>
                   <div>
                     <h3 className="font-semibold" style={{ color: COLORS.primary }}>Dashboard</h3>
-                    <p className="text-xs" style={{ color: COLORS.secondary }}>Payment Pulse</p>
+                    <p className="text-sm" style={{ color: THEME.muted }}>Payment Pulse</p>
                   </div>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm" style={{ color: COLORS.dark }}>Status:</span>
-                  <span className="px-2 py-1 text-xs rounded-full bg-emerald-500/20 text-emerald-600 font-medium">
+                  <span className="text-sm" style={{ color: THEME.text }}>Status:</span>
+                  <span className="px-2 py-1 text-sm rounded-full bg-emerald-100 text-emerald-800 font-semibold">
                     Active
                   </span>
                 </div>
@@ -812,18 +862,18 @@ export default function Dashboard() {
                 }}
               >
                 <div className="flex items-center justify-between mb-4">
-                  <span className="text-sm font-semibold" style={{ color: COLORS.dark }}>Quick Stats</span>
+                  <span className="text-sm font-semibold" style={{ color: THEME.text }}>Quick Stats</span>
                   <Activity className="w-4 h-4" style={{ color: COLORS.primary }} />
                 </div>
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs" style={{ color: COLORS.secondary }}>High Risk</span>
+                    <span className="text-sm" style={{ color: THEME.muted }}>High Risk</span>
                     <span className="text-sm font-semibold" style={{ color: stats.highRisk > 50 ? COLORS.danger : COLORS.success }}>
                       {stats.highRisk}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-xs" style={{ color: COLORS.secondary }}>Recovery Rate</span>
+                    <span className="text-sm" style={{ color: THEME.muted }}>Recovery Rate</span>
                     <span className="text-sm font-semibold" style={{ color: COLORS.success }}>
                       {stats.recoveryRate}%
                     </span>
@@ -838,10 +888,10 @@ export default function Dashboard() {
         <main className="flex-1 p-6">
 
           <div className="mb-8">
-            <h1 className="text-3xl font-bold mb-2" style={{ color: COLORS.dark }}>
+            <h1 className="text-3xl font-bold mb-2" style={{ color: THEME.text }}>
               Customer Analysis Dashboard
             </h1>
-            <p className="text-sm" style={{ color: COLORS.secondary }}>
+            <p className="text-base" style={{ color: THEME.muted }}>
               Welcome back, <span className="font-semibold" style={{ color: COLORS.primary }}>
                 {user?.email?.split('@')[0] || 'Admin'}
               </span>. Here is the latest customer payment status.
@@ -908,39 +958,39 @@ export default function Dashboard() {
             }}
           >
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-semibold" style={{ color: COLORS.primary }}>
+              <h2 className="text-lg font-semibold" style={{ color: THEME.text }}>
                 Recovery Performance
               </h2>
               <button
                 onClick={() => setShowRevenue(!showRevenue)}
-                className="p-2 rounded-lg hover:bg-white/50 transition-colors"
-                style={{ color: COLORS.secondary }}
+                className="p-2 rounded-lg transition-colors"
+                style={{ color: THEME.muted }}
               >
                 {showRevenue ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <div className="p-4 rounded-xl" style={{ backgroundColor: 'white' }}>
+              <div className="p-4 rounded-xl" style={{ backgroundColor: THEME.cardBg }}>
                 <div className="flex items-center mb-2">
                   <div className="p-2 rounded-lg mr-3" style={{ backgroundColor: `${COLORS.success}15` }}>
                     <Target className="w-4 h-4" style={{ color: COLORS.success }} />
                   </div>
-                  <span className="text-sm font-semibold" style={{ color: COLORS.dark }}>Recovery Rate</span>
+                  <span className="text-sm font-semibold" style={{ color: THEME.text }}>Recovery Rate</span>
                 </div>
-                <p className="text-2xl font-bold mb-1" style={{ color: COLORS.dark }}>{stats.recoveryRate}%</p>
-                <p className="text-xs" style={{ color: COLORS.secondary }}>+2.3% from last month</p>
+                <p className="text-2xl font-bold mb-1" style={{ color: THEME.text }}>{stats.recoveryRate}%</p>
+                <p className="text-sm" style={{ color: THEME.muted }}>+2.3% from last month</p>
               </div>
 
-              <div className="p-4 rounded-xl" style={{ backgroundColor: 'white' }}>
+              <div className="p-4 rounded-xl" style={{ backgroundColor: THEME.cardBg }}>
                 <div className="flex items-center mb-2">
                   <div className="p-2 rounded-lg mr-3" style={{ backgroundColor: `${COLORS.warning}15` }}>
                     <Clock className="w-4 h-4" style={{ color: COLORS.warning }} />
                   </div>
-                  <span className="text-sm font-semibold" style={{ color: COLORS.dark }}>Avg Payment Days</span>
+                  <span className="text-sm font-semibold" style={{ color: THEME.text }}>Avg Payment Days</span>
                 </div>
-                <p className="text-2xl font-bold mb-1" style={{ color: COLORS.dark }}>{stats.avgPaymentDays}</p>
-                <p className="text-xs" style={{ color: COLORS.secondary }}>-3 days improvement</p>
+                <p className="text-2xl font-bold mb-1" style={{ color: THEME.text }}>{stats.avgPaymentDays}</p>
+                <p className="text-sm" style={{ color: THEME.muted }}>-3 days improvement</p>
               </div>
             </div>
           </div>
@@ -949,7 +999,7 @@ export default function Dashboard() {
           <div
             className="rounded-2xl overflow-hidden"
             style={{
-              background: 'white',
+              background: THEME.cardBg,
               border: `1px solid ${COLORS.primary}20`,
               boxShadow: `0 8px 32px ${COLORS.primary}10`,
             }}
@@ -968,16 +1018,16 @@ export default function Dashboard() {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id as any)}
-                    className={`flex items-center space-x-2 py-4 border-b-2 transition-all duration-300 ${
-                      activeTab === tab.id
-                        ? 'border-blue-600 text-blue-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700'
-                    }`}
+                    className="flex items-center space-x-2 py-4 border-b-2 transition-all duration-300"
+                    style={{
+                      borderColor: activeTab === tab.id ? COLORS.primary : 'transparent',
+                      color: activeTab === tab.id ? COLORS.primary : THEME.muted,
+                    }}
                   >
                     <tab.icon className="w-4 h-4" />
                     <span className="font-medium">{tab.label}</span>
                     {tab.id === 'customers' && stats.highRisk > 0 && (
-                      <span className="px-2 py-0.5 text-xs rounded-full bg-red-500/20 text-red-600">
+                      <span className="px-2 py-0.5 text-sm rounded-full bg-red-100 text-red-800 font-semibold">
                         {stats.highRisk}
                       </span>
                     )}
@@ -987,12 +1037,12 @@ export default function Dashboard() {
             </div>
 
             <div className="p-6">
-              {activeTab === 'upload' && <FileUpload onUploadComplete={loadCustomers} />}
+              {activeTab === 'upload' && <FileUpload onUploadComplete={loadCustomers} isDarkMode={isDarkMode} />}
               {activeTab === 'customers' && (
-                <CustomerList customers={customers} loading={loading} onRefresh={loadCustomers} />
+                <CustomerList customers={customers} loading={loading} onRefresh={loadCustomers} isDarkMode={isDarkMode} />
               )}
-              {activeTab === 'analytics' && <Analytics customers={customers} />}
-              {activeTab === 'add_customer' && <AddCustomer onCustomerAdded={loadCustomers} />}
+              {activeTab === 'analytics' && <Analytics customers={customers} isDarkMode={isDarkMode} />}
+              {activeTab === 'add_customer' && <AddCustomer onCustomerAdded={loadCustomers} isDarkMode={isDarkMode} />}
             </div>
           </div>
 
@@ -1000,16 +1050,16 @@ export default function Dashboard() {
           <div
             className="mt-6 p-6 rounded-2xl"
             style={{
-              background: 'white',
+              background: THEME.cardBg,
               border: `1px solid ${COLORS.primary}20`,
             }}
           >
-            <h2 className="text-lg font-semibold mb-6" style={{ color: COLORS.primary }}>
+            <h2 className="text-lg font-semibold mb-6" style={{ color: THEME.text }}>
               Recent Activity
             </h2>
             <div className="space-y-4">
               {recentActivities.map((activity) => (
-                <div key={activity.id} className="flex items-center justify-between p-4 rounded-xl hover:bg-gray-50/50 transition-colors">
+                <div key={activity.id} className="flex items-center justify-between p-4 rounded-xl" style={{ backgroundColor: `${COLORS.primary}05` }}>
                   <div className="flex items-center space-x-4">
                     <div
                       className="p-2 rounded-lg"
@@ -1021,11 +1071,11 @@ export default function Dashboard() {
                       <activity.icon className="w-4 h-4" style={{ color: activity.color }} />
                     </div>
                     <div>
-                      <p className="font-medium text-sm" style={{ color: COLORS.dark }}>{activity.action}</p>
-                      <p className="text-xs" style={{ color: COLORS.secondary }}>by {activity.user}</p>
+                      <p className="font-medium text-base" style={{ color: THEME.text }}>{activity.action}</p>
+                      <p className="text-sm" style={{ color: THEME.muted }}>by {activity.user}</p>
                     </div>
                   </div>
-                  <span className="text-xs" style={{ color: COLORS.secondary }}>{activity.time}</span>
+                  <span className="text-sm" style={{ color: THEME.muted }}>{activity.time}</span>
                 </div>
               ))}
             </div>
@@ -1033,7 +1083,7 @@ export default function Dashboard() {
 
           {/* Footer */}
           <div className="mt-8 text-center">
-            <p className="text-sm" style={{ color: COLORS.secondary }}>
+            <p className="text-sm" style={{ color: THEME.muted }}>
               Payment Pulse v2.1 • Last updated: Today, {new Date().getHours()}:{new Date().getMinutes().toString().padStart(2, '0')}
             </p>
           </div>

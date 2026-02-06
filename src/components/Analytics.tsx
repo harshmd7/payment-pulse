@@ -1,5 +1,5 @@
 import { Customer } from '../lib/supabase';
-import { TrendingUp, Users, AlertCircle, Calendar, BarChart3, Target, TrendingUp as TrendingUpIcon } from 'lucide-react';
+import { TrendingUp, Users, AlertCircle, Calendar, BarChart3, Target } from 'lucide-react';
 
 const COLORS = {
   primary: '#1b4079',
@@ -16,9 +16,10 @@ const COLORS = {
 
 interface AnalyticsProps {
   customers: Customer[];
+  isDarkMode?: boolean;
 }
 
-export default function Analytics({ customers }: AnalyticsProps) {
+export default function Analytics({ customers, isDarkMode = false }: AnalyticsProps) {
   const highRiskCustomers = customers.filter((c) => c.risk_score >= 70);
   const moderateRiskCustomers = customers.filter((c) => c.risk_score >= 40 && c.risk_score < 70);
   const lowRiskCustomers = customers.filter((c) => c.risk_score < 40);
@@ -56,8 +57,8 @@ export default function Analytics({ customers }: AnalyticsProps) {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold mb-2" style={{ color: COLORS.dark }}>Analytics Dashboard</h2>
-        <p style={{ color: COLORS.secondary }}>Comprehensive insights into your customer portfolio</p>
+        <h2 className="text-2xl font-bold mb-2" style={{ color: isDarkMode ? '#e6eef8' : COLORS.dark }}>Analytics Dashboard</h2>
+        <p style={{ color: isDarkMode ? '#b8c5d0' : COLORS.secondary }}>Comprehensive insights into your customer portfolio</p>
       </div>
 
       <div className="grid md:grid-cols-3 gap-6">
@@ -81,11 +82,11 @@ export default function Analytics({ customers }: AnalyticsProps) {
                 <Users className="w-6 h-6" style={{ color: COLORS.primary }} />
               </div>
               <div>
-                <p className="text-sm font-semibold" style={{ color: COLORS.secondary }}>Total Portfolio</p>
-                <p className="text-2xl font-bold" style={{ color: COLORS.dark }}>{customers.length}</p>
+                <p className="text-sm font-semibold" style={{ color: isDarkMode ? '#b8c5d0' : COLORS.secondary }}>Total Portfolio</p>
+                <p className="text-2xl font-bold" style={{ color: isDarkMode ? '#e6eef8' : COLORS.dark }}>{customers.length}</p>
               </div>
             </div>
-            <p className="text-sm" style={{ color: COLORS.secondary }}>Active customer accounts</p>
+            <p className="text-sm" style={{ color: isDarkMode ? '#b8c5d0' : COLORS.secondary }}>Active customer accounts</p>
           </div>
         </div>
 
@@ -109,11 +110,11 @@ export default function Analytics({ customers }: AnalyticsProps) {
                 <Target className="w-6 h-6" style={{ color: COLORS.success }} />
               </div>
               <div>
-                <p className="text-sm font-semibold" style={{ color: COLORS.secondary }}>Total Outstanding</p>
-                <p className="text-2xl font-bold" style={{ color: COLORS.dark }}>₹{totalOutstanding.toLocaleString()}</p>
+                <p className="text-sm font-semibold" style={{ color: isDarkMode ? '#b8c5d0' : COLORS.secondary }}>Total Outstanding</p>
+                <p className="text-2xl font-bold" style={{ color: isDarkMode ? '#e6eef8' : COLORS.dark }}>₹{totalOutstanding.toLocaleString()}</p>
               </div>
             </div>
-            <p className="text-sm" style={{ color: COLORS.secondary }}>Across all accounts</p>
+            <p className="text-sm" style={{ color: isDarkMode ? '#b8c5d0' : COLORS.secondary }}>Across all accounts</p>
           </div>
         </div>
 
@@ -137,11 +138,11 @@ export default function Analytics({ customers }: AnalyticsProps) {
                 <Calendar className="w-6 h-6" style={{ color: COLORS.warning }} />
               </div>
               <div>
-                <p className="text-sm font-semibold" style={{ color: COLORS.secondary }}>Avg Days Overdue</p>
-                <p className="text-2xl font-bold" style={{ color: COLORS.dark }}>{avgDaysOverdue.toFixed(0)}</p>
+                <p className="text-sm font-semibold" style={{ color: isDarkMode ? '#b8c5d0' : COLORS.secondary }}>Avg Days Overdue</p>
+                <p className="text-2xl font-bold" style={{ color: isDarkMode ? '#e6eef8' : COLORS.dark }}>{avgDaysOverdue.toFixed(0)}</p>
               </div>
             </div>
-            <p className="text-sm" style={{ color: COLORS.secondary }}>Portfolio average</p>
+            <p className="text-sm" style={{ color: isDarkMode ? '#b8c5d0' : COLORS.secondary }}>Portfolio average</p>
           </div>
         </div>
       </div>
@@ -150,7 +151,7 @@ export default function Analytics({ customers }: AnalyticsProps) {
         <div
           className="rounded-2xl p-6"
           style={{
-            background: 'white',
+            background: isDarkMode ? `${COLORS.primary}12` : 'white',
             border: `1px solid ${COLORS.primary}20`,
             boxShadow: `0 8px 32px ${COLORS.primary}10`,
           }}
@@ -164,12 +165,12 @@ export default function Analytics({ customers }: AnalyticsProps) {
               let barColor = COLORS.danger;
               if (risk.label === 'Moderate Risk') barColor = COLORS.warning;
               if (risk.label === 'Low Risk') barColor = COLORS.success;
-              
+
               return (
                 <div key={index}>
                   <div className="flex items-center justify-between mb-2">
-                    <span style={{ color: COLORS.dark }}>{risk.label}</span>
-                    <span style={{ color: COLORS.secondary }}>
+                    <span style={{ color: isDarkMode ? '#e6eef8' : COLORS.dark }}>{risk.label}</span>
+                    <span style={{ color: isDarkMode ? '#b8c5d0' : COLORS.secondary }}>
                       {risk.count} ({risk.percentage.toFixed(0)}%)
                     </span>
                   </div>
@@ -188,7 +189,7 @@ export default function Analytics({ customers }: AnalyticsProps) {
         <div
           className="rounded-2xl p-6"
           style={{
-            background: 'white',
+            background: isDarkMode ? `${COLORS.primary}12` : 'white',
             border: `1px solid ${COLORS.primary}20`,
             boxShadow: `0 8px 32px ${COLORS.primary}10`,
           }}
@@ -207,7 +208,7 @@ export default function Analytics({ customers }: AnalyticsProps) {
                   border: `1px solid ${COLORS.primary}10`,
                 }}
               >
-                <span style={{ color: COLORS.dark }}>{range.label}</span>
+                <span style={{ color: isDarkMode ? '#e6eef8' : COLORS.dark }}>{range.label}</span>
                 <span className="font-semibold" style={{ color: COLORS.primary }}>{range.count}</span>
               </div>
             ))}
@@ -218,7 +219,7 @@ export default function Analytics({ customers }: AnalyticsProps) {
       <div
         className="rounded-2xl p-6"
         style={{
-          background: 'white',
+          background: isDarkMode ? `${COLORS.primary}12` : 'white',
           border: `1px solid ${COLORS.primary}20`,
           boxShadow: `0 8px 32px ${COLORS.primary}10`,
         }}
@@ -237,8 +238,8 @@ export default function Analytics({ customers }: AnalyticsProps) {
                 border: `1px solid ${COLORS.primary}15`,
               }}
             >
-              <p className="text-sm font-semibold mb-2" style={{ color: COLORS.secondary }}>{range.label}</p>
-              <p className="text-3xl font-bold" style={{ color: COLORS.dark }}>{range.count}</p>
+              <p className="text-sm font-semibold mb-2" style={{ color: isDarkMode ? '#b8c5d0' : COLORS.secondary }}>{range.label}</p>
+              <p className="text-3xl font-bold" style={{ color: isDarkMode ? '#e6eef8' : COLORS.dark }}>{range.count}</p>
             </div>
           ))}
         </div>
@@ -247,7 +248,7 @@ export default function Analytics({ customers }: AnalyticsProps) {
       <div
         className="rounded-2xl p-6"
         style={{
-          background: 'white',
+          background: isDarkMode ? `${COLORS.primary}12` : 'white',
           border: `1px solid ${COLORS.primary}20`,
           boxShadow: `0 8px 32px ${COLORS.primary}10`,
         }}
@@ -276,13 +277,13 @@ export default function Analytics({ customers }: AnalyticsProps) {
                   <span className="text-white font-bold text-sm">{index + 1}</span>
                 </div>
                 <div>
-                  <p className="font-semibold" style={{ color: COLORS.dark }}>{customer.name}</p>
-                  <p className="text-sm" style={{ color: COLORS.secondary }}>{customer.days_overdue} days overdue</p>
+                  <p className="font-semibold" style={{ color: isDarkMode ? '#e6eef8' : COLORS.dark }}>{customer.name}</p>
+                  <p className="text-sm" style={{ color: isDarkMode ? '#b8c5d0' : COLORS.secondary }}>{customer.days_overdue} days overdue</p>
                 </div>
               </div>
               <div className="text-right">
-                <p className="font-bold" style={{ color: COLORS.dark }}>₹{Number(customer.outstanding_amount).toLocaleString()}</p>
-                <p className="text-sm" style={{ color: COLORS.secondary }}>Risk: {customer.risk_score}</p>
+                <p className="font-bold" style={{ color: isDarkMode ? '#e6eef8' : COLORS.dark }}>₹{Number(customer.outstanding_amount).toLocaleString()}</p>
+                <p className="text-sm" style={{ color: isDarkMode ? '#b8c5d0' : COLORS.secondary }}>Risk: {customer.risk_score}</p>
               </div>
             </div>
           ))}
@@ -300,7 +301,7 @@ export default function Analytics({ customers }: AnalyticsProps) {
           <AlertCircle className="w-5 h-5" style={{ color: COLORS.primary }} />
           <span>AI Recommendations</span>
         </h3>
-        <ul className="space-y-2 text-sm" style={{ color: COLORS.secondary }}>
+        <ul className="space-y-2 text-sm" style={{ color: isDarkMode ? '#b8c5d0' : COLORS.secondary }}>
           <li>• Focus agent resources on {highRiskCustomers.length} high-risk accounts for maximum recovery</li>
           <li>• Implement automated reminders for {lowRiskCustomers.length} low-risk customers to reduce operational costs</li>
           <li>• Expected recovery improvement: 20-30% with AI-driven prioritization</li>

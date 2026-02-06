@@ -1,51 +1,79 @@
 import { useState, useEffect } from 'react';
 import { 
-  ArrowRight, BarChart3, Brain, Shield, TrendingUp, Zap, 
-  ChevronDown, CheckCircle, MessageSquare, Globe, 
-  Clock, Sparkles, Star, Target, LineChart, 
-  PieChart, X, Menu, Sun, Moon, Users, Mail, Phone, MapPin,
-  Github, Twitter, Linkedin, Crown, Award, Gem, Castle, 
-  Scroll, ShieldCheck, Trophy, Diamond, ChevronRight,
-  Calendar, TrendingUp as TrendingUpIcon, Users as UsersIcon,
-  DollarSign, Building, BarChart3 as ChartBar, Clock as ClockIcon
+  ArrowRight, Brain, TrendingUp, Sparkles, Star, Target,
+  CheckCircle, MessageSquare, Globe, X, Menu, Sun, Moon,
+  Users as UsersIcon, Mail, Phone, MapPin, Github, Twitter, Linkedin,
+  Crown, Award, Gem, Castle, Scroll, ShieldCheck, Trophy, Diamond,
+  ChevronRight, DollarSign, Building, BarChart3 as ChartBar, Clock as ClockIcon
 } from 'lucide-react';
+import { sendToGemini } from '../utils/geminiClient';
 
 // Color palette
 const COLORS = {
-  primary: '#1b4079',    // Professional Blue
-  secondary: '#4d7c8a',  // Steel Blue
-  accent1: '#7f9c96',    // Sage Green
-  accent2: '#8fad88',    // Olive Green
-  accent3: '#cbdf90',    // Pale Green
-  gold: '#d4af37',       // Gold accent color
-  lightGold: '#f4e4a6',
+  primary: '#1b4079',
+  secondary: '#4d7c8a',
+  accent1: '#7f9c96',
+  accent2: '#8fad88',
+  accent3: '#cbdf90',
+  gold: '#f6c84c',
+  lightGold: '#ffefc2',
   dark: '#0a1931',
-  light: '#f8f9fa'
+  light: '#f8f9fa',
 };
 
-// --- Static Data ---
-const testimonials = [
-  { 
-    name: "Sarah Chen", 
-    role: "CFO, FinTech Corp", 
-    content: "Increased recovery rates by 35% in just 3 months. The platform's elegance matches its performance.", 
-    avatar: "SC",
-    rating: 5
+const stats = [
+  { value: "35%", label: "Higher Recovery Rate", icon: TrendingUp, suffix: "+" },
+  { value: "60%", label: "Faster Collections", icon: ClockIcon, suffix: " faster" },
+  { value: "92%", label: "Prediction Accuracy", icon: Target, suffix: "%" },
+  { value: "45%", label: "Cost Reduction", icon: ChartBar, suffix: " saved" },
+];
+
+interface TimelineItem {
+  milestone: string;
+  title: string;
+  description: string;
+  icon: any;
+}
+
+const timelineData: TimelineItem[] = [
+  { milestone: 'Founded', title: 'The Foundation', description: 'Payment Pulse established with a vision to revolutionize debt recovery', icon: Castle },
+  { milestone: 'Innovation', title: 'AI Intelligence Launch', description: 'Introduced our proprietary emotion-detection AI system', icon: Brain },
+  { milestone: 'Growth', title: 'Bank Partnership Era', description: 'Secured partnerships with 3 major banking institutions', icon: Building },
+  { milestone: 'Expansion', title: 'Global Expansion', description: 'Expanded operations to Europe and Asia-Pacific regions', icon: Globe },
+  { milestone: 'Award', title: "Industry Recognition", description: "Awarded 'FinTech Innovation of the Year'", icon: Trophy },
+  { milestone: 'Scale', title: 'Enterprise Launch', description: 'Launched enterprise suite for Fortune 500 companies', icon: Award }
+];
+
+interface Testimonial {
+  name: string;
+  role: string;
+  content: string;
+  avatar: string;
+  rating: number;
+}
+
+const testimonials: Testimonial[] = [
+  {
+    name: 'Marcus Rodriguez',
+    role: 'Operations Director, BankPlus',
+    content: 'Excellent solution for modern finance. Reduced customer complaints by 60% while improving collections.',
+    avatar: 'MR',
+    rating: 5,
   },
-  { 
-    name: "Marcus Rodriguez", 
-    role: "Operations Director, BankPlus", 
-    content: "Excellent solution for modern finance. Reduced customer complaints by 60% while improving collections.", 
-    avatar: "MR",
-    rating: 5
+  {
+    name: 'Priya Sharma',
+    role: 'Head of Risk, CreditUnion',
+    content: 'The AI predictions are 92% accurate. A truly premium experience from start to finish.',
+    avatar: 'PS',
+    rating: 5,
   },
-  { 
-    name: "Priya Sharma", 
-    role: "Head of Risk, CreditUnion", 
-    content: "The AI predictions are 92% accurate. A truly premium experience from start to finish.", 
-    avatar: "PS",
-    rating: 5
-  },
+  {
+    name: 'Amir Khan',
+    role: 'CFO, FinBank',
+    content: 'Payment Pulse reduced our delinquency by 40% in three months — excellent analytics and support.',
+    avatar: 'AK',
+    rating: 5,
+  }
 ];
 
 const features = [
@@ -84,81 +112,6 @@ const features = [
     title: "Automated Documentation", 
     desc: "Automated compliance reporting that meets regulatory standards",
     color: COLORS.accent2
-  },
-];
-
-const faqs = [
-  { 
-    question: "How quickly can we implement?", 
-    answer: "Most clients go live within 2-4 weeks with our seamless integration. We provide a dedicated implementation team.",
-    icon: Clock
-  },
-  { 
-    question: "Is it suitable for financial institutions?", 
-    answer: "Perfectly designed for banks, credit unions, and lending institutions seeking premium solutions.",
-    icon: Building
-  },
-  { 
-    question: "How does the AI ensure compliance?", 
-    answer: "Our system automatically adapts to regional regulations with precision and audit trails.",
-    icon: ShieldCheck
-  },
-  { 
-    question: "What's the pricing model?", 
-    answer: "Tailored subscription plans based on recovery performance, volume, and enterprise needs.",
-    icon: DollarSign
-  },
-];
-
-const stats = [
-  { value: "35%", label: "Higher Recovery Rate", icon: TrendingUp, suffix: "+" },
-  { value: "60%", label: "Faster Collections", icon: ClockIcon, suffix: " faster" },
-  { value: "92%", label: "Prediction Accuracy", icon: Target, suffix: "%" },
-  { value: "45%", label: "Cost Reduction", icon: BarChart3, suffix: " saved" },
-];
-
-const timelineData = [
-  {
-    year: "2020",
-    title: "The Foundation",
-    description: "Payment Pulse established with a vision to revolutionize debt recovery",
-    icon: Castle,
-    milestone: "Founded"
-  },
-  {
-    year: "2021",
-    title: "AI Intelligence Launch",
-    description: "Introduced our proprietary emotion-detection AI system",
-    icon: Brain,
-    milestone: "Innovation"
-  },
-  {
-    year: "2022",
-    title: "Bank Partnership Era",
-    description: "Secured partnerships with 3 major banking institutions",
-    icon: Building,
-    milestone: "Growth"
-  },
-  {
-    year: "2023",
-    title: "Global Expansion",
-    description: "Expanded operations to Europe and Asia-Pacific regions",
-    icon: Globe,
-    milestone: "Expansion"
-  },
-  {
-    year: "2024",
-    title: "Industry Recognition",
-    description: "Awarded 'FinTech Innovation of the Year'",
-    icon: Trophy,
-    milestone: "Award"
-  },
-  {
-    year: "2025",
-    title: "Enterprise Launch",
-    description: "Launched enterprise suite for Fortune 500 companies",
-    icon: Award,
-    milestone: "Scale"
   }
 ];
 
@@ -168,25 +121,57 @@ interface LandingPageProps {
 
 export default function LandingPage({ onGetStarted = () => {} }: LandingPageProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
   const [activeSection, setActiveSection] = useState('home');
   const [hoveredYear, setHoveredYear] = useState<string | null>(null);
-  
-  // Theme State
   const [isDarkMode, setIsDarkMode] = useState(false);
 
-  const toggleTheme = () => {
-    setIsDarkMode(!isDarkMode);
+  const toggleTheme = () => setIsDarkMode((v) => !v);
+
+  useEffect(() => {
+    if (isDarkMode) document.documentElement.classList.add('dark');
+    else document.documentElement.classList.remove('dark');
+  }, [isDarkMode]);
+
+  const THEME = {
+    bg: isDarkMode ? COLORS.dark : COLORS.light,
+    text: isDarkMode ? '#e6eef8' : COLORS.dark,
+    muted: isDarkMode ? '#9aa6b2' : COLORS.secondary,
+    heading: isDarkMode ? '#ffffff' : COLORS.dark,
+    cardBg: isDarkMode ? COLORS.primary + '15' : 'white',
+    navBg: isDarkMode ? COLORS.dark + 'ee' : COLORS.light + 'ee',
+    navBorder: isDarkMode ? COLORS.primary + '40' : COLORS.accent1 + '30'
   };
 
-  // Apply theme to HTML tag
-  useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [isDarkMode]);
+  // Chat widget state and simple simulated bot
+  const [chatOpen, setChatOpen] = useState(false);
+  const [messages, setMessages] = useState<{ from: 'user' | 'bot'; text: string }[]>([]);
+  const [messageText, setMessageText] = useState('');
+
+  const sendMessage = async (text: string) => {
+    if (!text.trim()) return;
+    const userMsg = { from: 'user' as const, text };
+    setMessages((m) => [...m, userMsg]);
+    setMessageText('');
+
+    // optimistic bot placeholder
+    const placeholder = { from: 'bot' as const, text: 'Thinking...' };
+    setMessages((m) => [...m, placeholder]);
+
+    // Attempt Gemini API reply; fall back to a simulated reply if not configured or fails
+    const reply = await sendToGemini(text);
+    const botText = reply || `Thanks — I received: "${text}". A human will reach out shortly.`;
+
+    // replace last placeholder with real bot reply
+    setMessages((prev) => {
+      const idx = prev.map((p) => p.text).lastIndexOf(placeholder.text);
+      if (idx >= 0) {
+        const copy = [...prev];
+        copy[idx] = { from: 'bot' as const, text: botText };
+        return copy;
+      }
+      return [...prev, { from: 'bot' as const, text: botText }];
+    });
+  };
 
   // Scroll to section
   const scrollToSection = (sectionId: string) => {
@@ -226,8 +211,8 @@ export default function LandingPage({ onGetStarted = () => {} }: LandingPageProp
     <div 
       className="min-h-screen overflow-hidden font-serif transition-colors duration-300 relative"
       style={{ 
-        backgroundColor: isDarkMode ? COLORS.dark : COLORS.light,
-        color: isDarkMode ? '#e5e5e5' : COLORS.dark
+        backgroundColor: THEME.bg,
+        color: THEME.text
       }}
     >
       <BackgroundPattern />
@@ -236,8 +221,8 @@ export default function LandingPage({ onGetStarted = () => {} }: LandingPageProp
       <nav 
         className="fixed top-0 w-full z-50 transition-all duration-500 backdrop-blur-xl"
         style={{ 
-          backgroundColor: isDarkMode ? `${COLORS.dark}ee` : `${COLORS.light}ee`,
-          borderBottom: `1px solid ${isDarkMode ? COLORS.primary + '40' : COLORS.accent1 + '30'}`
+          backgroundColor: THEME.navBg,
+          borderBottom: `1px solid ${THEME.navBorder}`
         }}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -260,7 +245,7 @@ export default function LandingPage({ onGetStarted = () => {} }: LandingPageProp
                 <span className="text-2xl font-bold tracking-tight" style={{ color: COLORS.primary }}>
                   Payment Pulse
                 </span>
-                <span className="text-xs tracking-widest uppercase opacity-70" style={{ color: COLORS.secondary }}>
+                <span className="text-xs tracking-widest uppercase opacity-70" style={{ color: THEME.muted }}>
                   Debt Solutions
                 </span>
               </div>
@@ -270,18 +255,17 @@ export default function LandingPage({ onGetStarted = () => {} }: LandingPageProp
             <div className="hidden lg:flex items-center space-x-2">
               {[
                 { id: 'home', label: 'Home' },
-                { id: 'timeline', label: 'Our Journey' },
-                { id: 'features', label: 'Features' },
-                { id: 'how-it-works', label: 'Strategy' },
-                { id: 'testimonials', label: 'Testimonials' },
-                { id: 'faq', label: 'FAQ' }
+                  { id: 'features', label: 'Features' },
+                  { id: 'how-it-works', label: 'Strategy' },
+                  { id: 'testimonials', label: 'Testimonials' },
+                  { id: 'integrations', label: 'Integrations' }
               ].map((item) => (
                 <button
                   key={item.id}
                   onClick={() => scrollToSection(item.id)}
                   className="relative px-5 py-2.5 text-sm font-medium transition-all duration-300 group"
                   style={{ 
-                    color: activeSection === item.id ? COLORS.primary : isDarkMode ? '#a0a0a0' : COLORS.secondary
+                    color: activeSection === item.id ? COLORS.primary : (isDarkMode ? THEME.muted : COLORS.secondary)
                   }}
                 >
                   <span className="relative z-10">{item.label}</span>
@@ -300,10 +284,10 @@ export default function LandingPage({ onGetStarted = () => {} }: LandingPageProp
                 <button 
                   onClick={toggleTheme}
                   className="p-2.5 rounded-lg transition-all duration-300 hover:scale-110"
-                  style={{ 
-                    backgroundColor: isDarkMode ? COLORS.primary + '20' : COLORS.accent3 + '20',
-                    color: isDarkMode ? COLORS.lightGold : COLORS.primary
-                  }}
+                    style={{ 
+                      backgroundColor: isDarkMode ? COLORS.primary + '20' : COLORS.accent3 + '20',
+                      color: isDarkMode ? COLORS.lightGold : COLORS.primary
+                    }}
                 >
                   {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
                 </button>
@@ -345,23 +329,22 @@ export default function LandingPage({ onGetStarted = () => {} }: LandingPageProp
         </div>
 
         {/* Mobile Menu Dropdown */}
-        {isMenuOpen && (
+            {isMenuOpen && (
           <div 
             className="lg:hidden absolute top-full w-full"
             style={{ 
-              backgroundColor: isDarkMode ? COLORS.dark : COLORS.light,
+              backgroundColor: THEME.bg,
               borderBottom: `1px solid ${COLORS.accent1 + '30'}`,
               boxShadow: `0 20px 40px ${COLORS.primary}20`
             }}
           >
             <div className="px-6 py-8 space-y-1">
-              {[
+              {[ 
                 { id: 'home', label: 'Home' },
-                { id: 'timeline', label: 'Our Journey' },
                 { id: 'features', label: 'Features' },
                 { id: 'how-it-works', label: 'Strategy' },
                 { id: 'testimonials', label: 'Testimonials' },
-                { id: 'faq', label: 'FAQ' }
+                { id: 'integrations', label: 'Integrations' }
               ].map((item) => (
                 <button
                   key={item.id}
@@ -433,7 +416,7 @@ export default function LandingPage({ onGetStarted = () => {} }: LandingPageProp
             </h1>
             
             {/* Subtitle */}
-            <p className="text-xl md:text-2xl mb-12 max-w-3xl mx-auto leading-relaxed" style={{ color: COLORS.secondary }}>
+            <p className="text-xl md:text-2xl mb-12 max-w-3xl mx-auto leading-relaxed" style={{ color: THEME.muted }}>
               Transform your debt collection with AI-powered intelligence and smart scheduling. 
               Recover more while maintaining excellent customer relationships.
             </p>
@@ -490,7 +473,7 @@ export default function LandingPage({ onGetStarted = () => {} }: LandingPageProp
                     {stat.value}
                     <span className="text-lg" style={{ color: COLORS.gold }}>{stat.suffix}</span>
                   </div>
-                  <div className="text-sm font-medium opacity-75" style={{ color: COLORS.secondary }}>
+                  <div className="text-sm font-medium opacity-75" style={{ color: THEME.muted }}>
                     {stat.label}
                   </div>
                 </div>
@@ -506,12 +489,12 @@ export default function LandingPage({ onGetStarted = () => {} }: LandingPageProp
           <div className="text-center mb-20">
             <div className="inline-flex items-center space-x-2 mb-4">
               <div className="w-2 h-8 rounded-full" style={{ backgroundColor: COLORS.gold }} />
-              <h2 className="text-4xl md:text-5xl font-bold" style={{ color: COLORS.dark }}>
+              <h2 className="text-4xl md:text-5xl font-bold" style={{ color: THEME.heading }}>
                 Our Journey
               </h2>
               <div className="w-2 h-8 rounded-full" style={{ backgroundColor: COLORS.gold }} />
             </div>
-            <p className="text-xl max-w-2xl mx-auto" style={{ color: COLORS.secondary }}>
+            <p className="text-xl max-w-2xl mx-auto" style={{ color: THEME.muted }}>
               A timeline of excellence, innovation, and achievements
             </p>
           </div>
@@ -530,31 +513,31 @@ export default function LandingPage({ onGetStarted = () => {} }: LandingPageProp
                   className={`relative lg:flex lg:items-center lg:justify-between ${
                     index % 2 === 0 ? 'lg:flex-row' : 'lg:flex-row-reverse'
                   }`}
-                  onMouseEnter={() => setHoveredYear(item.year)}
+                  onMouseEnter={() => setHoveredYear(item.milestone)}
                   onMouseLeave={() => setHoveredYear(null)}
                 >
                   {/* Year Marker */}
                   <div className="lg:w-1/2 flex justify-center lg:justify-end mb-8 lg:mb-0 relative">
                     <div 
                       className={`relative transition-all duration-500 ${
-                        hoveredYear === item.year ? 'scale-125' : 'scale-100'
+                        hoveredYear === item.milestone ? 'scale-125' : 'scale-100'
                       }`}
                     >
-                      <div 
+                          <div 
                         className="w-24 h-24 rounded-full flex items-center justify-center relative z-10 border-4"
                         style={{ 
                           backgroundColor: COLORS.primary,
                           borderColor: COLORS.gold,
-                          boxShadow: `0 0 40px ${COLORS.gold}${hoveredYear === item.year ? '80' : '40'}`
+                          boxShadow: `0 0 40px ${COLORS.gold}${hoveredYear === item.milestone ? '80' : '40'}`
                         }}
                       >
-                        <span className="text-2xl font-bold text-white">{item.year}</span>
+                        <item.icon className="w-10 h-10 text-white" />
                       </div>
                       <div 
                         className="absolute inset-0 rounded-full blur-lg transition-opacity duration-500"
                         style={{ 
                           backgroundColor: COLORS.gold,
-                          opacity: hoveredYear === item.year ? 0.6 : 0.3
+                          opacity: hoveredYear === item.milestone ? 0.6 : 0.3
                         }}
                       />
                     </div>
@@ -568,7 +551,7 @@ export default function LandingPage({ onGetStarted = () => {} }: LandingPageProp
                         backgroundColor: isDarkMode ? COLORS.primary + '15' : 'white',
                         border: `1px solid ${COLORS.accent1}30`,
                         boxShadow: `0 10px 40px ${COLORS.primary}20`,
-                        transform: hoveredYear === item.year ? 'translateY(-5px)' : 'none'
+                        transform: hoveredYear === item.milestone ? 'translateY(-5px)' : 'none'
                       }}
                     >
                       <div className="flex items-start space-x-4 mb-4">
@@ -580,7 +563,7 @@ export default function LandingPage({ onGetStarted = () => {} }: LandingPageProp
                         </div>
                         <div className="flex-1">
                           <div className="flex items-center justify-between mb-2">
-                            <h3 className="text-2xl font-bold" style={{ color: COLORS.dark }}>
+                            <h3 className="text-2xl font-bold" style={{ color: THEME.heading }}>
                               {item.title}
                             </h3>
                             <span 
@@ -593,7 +576,7 @@ export default function LandingPage({ onGetStarted = () => {} }: LandingPageProp
                               {item.milestone}
                             </span>
                           </div>
-                          <p className="opacity-80" style={{ color: COLORS.secondary }}>
+                          <p className="opacity-80" style={{ color: THEME.muted }}>
                             {item.description}
                           </p>
                         </div>
@@ -611,7 +594,7 @@ export default function LandingPage({ onGetStarted = () => {} }: LandingPageProp
       <section id="features" className="py-24 px-4 relative overflow-hidden">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-20">
-            <h2 className="text-4xl md:text-5xl font-bold mb-6" style={{ color: COLORS.dark }}>
+            <h2 className="text-4xl md:text-5xl font-bold mb-6" style={{ color: THEME.heading }}>
               Powerful <span style={{ color: COLORS.primary }}>Features</span> for
               <br />
               <span className="flex items-center justify-center gap-4 mt-2">
@@ -620,7 +603,7 @@ export default function LandingPage({ onGetStarted = () => {} }: LandingPageProp
                 <Diamond className="w-8 h-8" style={{ color: COLORS.gold }} />
               </span>
             </h2>
-            <p className="text-xl max-w-2xl mx-auto" style={{ color: COLORS.secondary }}>
+            <p className="text-xl max-w-2xl mx-auto" style={{ color: THEME.muted }}>
               Experience the best of debt recovery technology
             </p>
           </div>
@@ -652,10 +635,10 @@ export default function LandingPage({ onGetStarted = () => {} }: LandingPageProp
                   >
                     <feature.icon className="w-8 h-8" style={{ color: feature.color }} />
                   </div>
-                  <h3 className="text-2xl font-bold mb-4" style={{ color: COLORS.dark }}>
+                  <h3 className="text-2xl font-bold mb-4" style={{ color: THEME.heading }}>
                     {feature.title}
                   </h3>
-                  <p className="leading-relaxed" style={{ color: COLORS.secondary }}>
+                  <p className="leading-relaxed" style={{ color: THEME.muted }}>
                     {feature.desc}
                   </p>
                   <div 
@@ -685,12 +668,12 @@ export default function LandingPage({ onGetStarted = () => {} }: LandingPageProp
           <div className="text-center mb-16">
             <div className="inline-flex items-center space-x-2 mb-6">
               <Trophy className="w-8 h-8" style={{ color: COLORS.gold }} />
-              <h2 className="text-4xl md:text-5xl font-bold" style={{ color: COLORS.dark }}>
+              <h2 className="text-4xl md:text-5xl font-bold" style={{ color: THEME.heading }}>
                 Testimonials
               </h2>
               <Trophy className="w-8 h-8" style={{ color: COLORS.gold }} />
             </div>
-            <p className="text-xl" style={{ color: COLORS.secondary }}>
+            <p className="text-xl" style={{ color: THEME.muted }}>
               Praised by financial institutions worldwide
             </p>
           </div>
@@ -727,10 +710,10 @@ export default function LandingPage({ onGetStarted = () => {} }: LandingPageProp
                     </span>
                   </div>
                   <div className="flex-1">
-                    <h4 className="text-xl font-bold mb-1" style={{ color: COLORS.dark }}>
+                    <h4 className="text-xl font-bold mb-1" style={{ color: THEME.heading }}>
                       {testimonial.name}
                     </h4>
-                    <p className="text-sm opacity-75" style={{ color: COLORS.secondary }}>
+                    <p className="text-sm opacity-75" style={{ color: THEME.muted }}>
                       {testimonial.role}
                     </p>
                   </div>
@@ -738,7 +721,7 @@ export default function LandingPage({ onGetStarted = () => {} }: LandingPageProp
                 
                 <p 
                   className="text-lg italic mb-6 leading-relaxed"
-                  style={{ color: COLORS.dark }}
+                  style={{ color: THEME.text }}
                 >
                   "{testimonial.content}"
                 </p>
@@ -760,70 +743,36 @@ export default function LandingPage({ onGetStarted = () => {} }: LandingPageProp
         </div>
       </section>
 
-      {/* FAQ Section */}
-      <section id="faq" className="py-24 px-4">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-16">
-            <div className="inline-flex items-center space-x-4 mb-6">
-              <div className="w-12 h-1 rounded-full" style={{ backgroundColor: COLORS.primary }} />
-              <h2 className="text-4xl md:text-5xl font-bold" style={{ color: COLORS.dark }}>
-                FAQ
-              </h2>
-              <div className="w-12 h-1 rounded-full" style={{ backgroundColor: COLORS.primary }} />
-            </div>
-            <p className="text-xl" style={{ color: COLORS.secondary }}>
-              Answers to your questions
+      {/* Integrations Section (replaces FAQ) */}
+      <section id="integrations" className="py-24 px-4">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl md:text-5xl font-bold" style={{ color: THEME.heading }}>
+              Integrations
+            </h2>
+            <p className="text-lg" style={{ color: THEME.muted }}>
+              Connect Payment Pulse with the tools you already use.
             </p>
           </div>
 
-          <div className="space-y-6">
-            {faqs.map((faq, index) => (
-              <div 
-                key={index}
-                className="rounded-xl overflow-hidden transition-all duration-300"
-                style={{ 
-                  border: `1px solid ${openFaqIndex === index ? COLORS.gold + '40' : COLORS.accent1 + '20'}`,
-                  boxShadow: openFaqIndex === index ? `0 10px 40px ${COLORS.gold}20` : 'none'
-                }}
-              >
-                <button
-                  className="w-full p-6 text-left flex items-center justify-between group"
-                  onClick={() => setOpenFaqIndex(openFaqIndex === index ? null : index)}
-                  style={{ 
-                    backgroundColor: openFaqIndex === index ? COLORS.primary + '10' : 'transparent'
-                  }}
-                >
-                  <div className="flex items-center space-x-4">
-                    <div 
-                      className="p-3 rounded-lg"
-                      style={{ backgroundColor: COLORS.gold + '20' }}
-                    >
-                      <faq.icon className="w-5 h-5" style={{ color: COLORS.gold }} />
-                    </div>
-                    <h3 className="text-xl font-semibold" style={{ color: COLORS.dark }}>
-                      {faq.question}
-                    </h3>
+          <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-6">
+            {[
+              { name: 'Stripe', icon: DollarSign, desc: 'Payments & reconciliation' },
+              { name: 'QuickBooks', icon: ChartBar, desc: 'Accounting sync' },
+              { name: 'Salesforce', icon: UsersIcon, desc: 'CRM & workflows' },
+              { name: 'Plaid', icon: Globe, desc: 'Bank account connections' }
+            ].map((intg) => (
+              <div key={intg.name} className="p-6 rounded-2xl border transition hover:shadow-lg" style={{ backgroundColor: isDarkMode ? COLORS.primary + '10' : 'white' }}>
+                <div className="flex items-center space-x-4 mb-4">
+                  <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ backgroundColor: COLORS.gold + '15' }}>
+                    <intg.icon className="w-6 h-6" style={{ color: COLORS.gold }} />
                   </div>
-                  <div 
-                    className={`p-2 rounded-lg transition-all duration-300 ${
-                      openFaqIndex === index ? 'rotate-180' : ''
-                    }`}
-                    style={{ 
-                      backgroundColor: COLORS.primary + '15',
-                      color: COLORS.primary
-                    }}
-                  >
-                    <ChevronDown className="w-5 h-5" />
+                  <div>
+                    <div className="font-semibold" style={{ color: THEME.heading }}>{intg.name}</div>
+                    <div className="text-sm" style={{ color: THEME.muted }}>{intg.desc}</div>
                   </div>
-                </button>
-                {openFaqIndex === index && (
-                  <div 
-                    className="px-6 pb-6"
-                    style={{ color: COLORS.secondary }}
-                  >
-                    <p className="text-lg leading-relaxed">{faq.answer}</p>
-                  </div>
-                )}
+                </div>
+                <div className="text-sm font-medium" style={{ color: COLORS.primary }}>Learn integration</div>
               </div>
             ))}
           </div>
@@ -876,7 +825,7 @@ export default function LandingPage({ onGetStarted = () => {} }: LandingPageProp
             </button>
             
             <button
-              onClick={() => scrollToSection('features')}
+              onClick={() => window.location.href = 'mailto:support@paymentpulse.com?subject=Contact%20Sales'}
               className="px-12 py-5 rounded-xl text-lg font-semibold transition-all duration-300 hover:scale-105 border-2"
               style={{ 
                 borderColor: COLORS.lightGold,
@@ -884,7 +833,7 @@ export default function LandingPage({ onGetStarted = () => {} }: LandingPageProp
                 backgroundColor: 'transparent'
               }}
             >
-              Schedule a Demo
+              Contact Sales
             </button>
           </div>
           
@@ -917,7 +866,7 @@ export default function LandingPage({ onGetStarted = () => {} }: LandingPageProp
       <footer className="py-16 px-4 relative overflow-hidden">
         <div 
           className="absolute inset-0"
-          style={{ backgroundColor: isDarkMode ? COLORS.dark : '#0f172a' }}
+          style={{ backgroundColor: THEME.bg }}
         />
         
         <div className="max-w-7xl mx-auto relative z-10">
@@ -934,11 +883,11 @@ export default function LandingPage({ onGetStarted = () => {} }: LandingPageProp
                   <Crown className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <span className="text-2xl font-bold text-white">Payment Pulse</span>
-                  <p className="text-sm opacity-60 text-white">Intelligent Debt Solutions</p>
+                  <span className="text-2xl font-bold" style={{ color: THEME.heading }}>Payment Pulse</span>
+                  <p className="text-sm opacity-60" style={{ color: THEME.muted }}>Intelligent Debt Solutions</p>
                 </div>
               </div>
-              <p className="text-white/70 leading-relaxed mb-8 max-w-md">
+              <p className="leading-relaxed mb-8 max-w-md" style={{ color: THEME.text }}>
                 The leading debt recovery technology platform, combining intelligent precision 
                 with cutting-edge AI to transform collections.
               </p>
@@ -961,13 +910,14 @@ export default function LandingPage({ onGetStarted = () => {} }: LandingPageProp
 
             {/* Quick Links */}
             <div>
-              <h4 className="text-white font-bold text-lg mb-6">Product</h4>
+              <h4 className="font-bold text-lg mb-6" style={{ color: THEME.heading }}>Product</h4>
               <ul className="space-y-3">
                 {['Features', 'Pricing', 'Case Studies', 'Documentation', 'Partners'].map((item) => (
                   <li key={item}>
                     <a 
                       href="#" 
-                      className="text-white/60 hover:text-white transition-colors text-sm"
+                      className="transition-colors text-sm"
+                      style={{ color: THEME.muted }}
                     >
                       {item}
                     </a>
@@ -978,13 +928,14 @@ export default function LandingPage({ onGetStarted = () => {} }: LandingPageProp
 
             {/* Company */}
             <div>
-              <h4 className="text-white font-bold text-lg mb-6">Company</h4>
+              <h4 className="font-bold text-lg mb-6" style={{ color: THEME.heading }}>Company</h4>
               <ul className="space-y-3">
                 {['About Us', 'Careers', 'Press', 'Legal', 'Contact'].map((item) => (
                   <li key={item}>
                     <a 
                       href="#" 
-                      className="text-white/60 hover:text-white transition-colors text-sm"
+                      className="transition-colors text-sm"
+                      style={{ color: THEME.muted }}
                     >
                       {item}
                     </a>
@@ -995,19 +946,19 @@ export default function LandingPage({ onGetStarted = () => {} }: LandingPageProp
 
             {/* Contact */}
             <div>
-              <h4 className="text-white font-bold text-lg mb-6">Contact</h4>
+              <h4 className="font-bold text-lg mb-6" style={{ color: THEME.heading }}>Contact</h4>
               <ul className="space-y-4">
                 <li className="flex items-start">
                   <Mail className="w-4 h-4 mr-3 mt-1 flex-shrink-0 opacity-60" style={{ color: COLORS.lightGold }} />
-                  <span className="text-white/70 text-sm">support@paymentpulse.com</span>
+                  <span className="text-sm" style={{ color: THEME.text }}>support@paymentpulse.com</span>
                 </li>
                 <li className="flex items-start">
                   <Phone className="w-4 h-4 mr-3 mt-1 flex-shrink-0 opacity-60" style={{ color: COLORS.lightGold }} />
-                  <span className="text-white/70 text-sm">+1 (888) PAY-PULSE</span>
+                  <span className="text-sm" style={{ color: THEME.text }}>+1 (888) PAY-PULSE</span>
                 </li>
                 <li className="flex items-start">
                   <MapPin className="w-4 h-4 mr-3 mt-1 flex-shrink-0 opacity-60" style={{ color: COLORS.lightGold }} />
-                  <span className="text-white/70 text-sm">100 Finance Blvd<br />San Francisco, CA</span>
+                  <span className="text-sm" style={{ color: THEME.text }}>100 Finance Blvd<br />San Francisco, CA</span>
                 </li>
               </ul>
             </div>
@@ -1032,20 +983,56 @@ export default function LandingPage({ onGetStarted = () => {} }: LandingPageProp
         </div>
       </footer>
 
-      {/* Floating Chat */}
-      <div className="fixed bottom-8 right-8 z-40 group">
-        <div 
-          className="absolute inset-0 rounded-full blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-          style={{ backgroundColor: COLORS.gold }}
-        />
-        <button 
-          className="relative w-16 h-16 rounded-full flex items-center justify-center shadow-2xl transition-all group-hover:scale-110"
-          style={{ 
-            background: `linear-gradient(135deg, ${COLORS.primary}, ${COLORS.secondary})`
-          }}
+      {/* Chat Widget */}
+      <div className="fixed bottom-6 right-6 z-50">
+        <button
+          onClick={() => setChatOpen(true)}
+          className="relative w-14 h-14 rounded-full flex items-center justify-center shadow-2xl transition-all hover:scale-105"
+          style={{ background: `linear-gradient(135deg, ${COLORS.primary}, ${COLORS.secondary})`, color: 'white' }}
         >
           <MessageSquare className="w-6 h-6 text-white" />
         </button>
+
+        {chatOpen && (
+          <div className="mt-3 w-80 max-w-full bg-white dark:bg-gray-900 rounded-2xl shadow-xl overflow-hidden" style={{ backgroundColor: isDarkMode ? COLORS.dark : 'white' }}>
+            <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: COLORS.accent1 + '20' }}>
+              <div className="flex items-center space-x-3">
+                <MessageSquare className="w-5 h-5" style={{ color: COLORS.primary }} />
+                <div style={{ color: THEME.heading }} className="font-semibold">Support Chat</div>
+              </div>
+              <button onClick={() => setChatOpen(false)} className="p-1 rounded-md">
+                <X className="w-4 h-4" style={{ color: THEME.muted }} />
+              </button>
+            </div>
+
+            <div className="p-3 h-64 overflow-auto" style={{ backgroundColor: isDarkMode ? COLORS.dark : 'white' }}>
+              {messages.length === 0 && (
+                <div className="text-sm text-center" style={{ color: THEME.muted }}>Ask a question — we're here to help.</div>
+              )}
+              {messages.map((m, i) => (
+                <div key={i} className={`mb-3 flex ${m.from === 'user' ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`px-3 py-2 rounded-xl max-w-[75%]`} style={{ backgroundColor: m.from === 'user' ? COLORS.primary : (isDarkMode ? '#0f1330' : COLORS.gold + '10'), color: m.from === 'user' ? 'white' : THEME.text }}>
+                    {m.text}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="p-3 border-t" style={{ borderColor: COLORS.accent1 + '20' }}>
+              <div className="flex items-center gap-2">
+                <input
+                  value={messageText}
+                  onChange={(e) => setMessageText(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') { sendMessage(messageText); } }}
+                  placeholder="Type your message..."
+                  className="flex-1 px-3 py-2 rounded-lg outline-none"
+                  style={{ backgroundColor: isDarkMode ? '#081227' : '#f8fafc', color: THEME.text }}
+                />
+                <button onClick={() => sendMessage(messageText)} className="px-3 py-2 rounded-lg" style={{ backgroundColor: COLORS.primary, color: 'white' }}>Send</button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Scroll to Top */}

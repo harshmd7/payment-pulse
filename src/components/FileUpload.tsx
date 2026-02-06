@@ -23,9 +23,10 @@ const COLORS = {
 
 interface FileUploadProps {
   onUploadComplete: () => void;
+  isDarkMode?: boolean;
 }
 
-export default function FileUpload({ onUploadComplete }: FileUploadProps) {
+export default function FileUpload({ onUploadComplete, isDarkMode = false }: FileUploadProps) {
   // CSV State
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -127,129 +128,129 @@ export default function FileUpload({ onUploadComplete }: FileUploadProps) {
       <div>
         <div className="flex items-center space-x-2 mb-4">
           <div className="w-2 h-8 rounded-full" style={{ backgroundColor: COLORS.gold }} />
-          <h2 className="text-2xl font-bold" style={{ color: COLORS.textHeader }}>
+          <h2 className="text-2xl font-bold" style={{ color: isDarkMode ? '#e6eef8' : COLORS.textHeader }}>
             Import Data
           </h2>
           <div className="w-2 h-8 rounded-full" style={{ backgroundColor: COLORS.gold }} />
         </div>
-        <p style={{ color: COLORS.textBody }}>
+        <p style={{ color: isDarkMode ? '#b8c5d0' : COLORS.textBody }}>
           Convert payment data automatically
         </p>
       </div>
 
       {/* --- CSV Upload Section --- */}
       <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-          <div
-            className="border-2 border-dashed rounded-2xl p-12 text-center transition-all duration-300 hover:shadow-lg cursor-pointer bg-white"
-            style={{
-              borderColor: file ? COLORS.primary : `${COLORS.primary}30`,
-              backgroundColor: file ? `${COLORS.primary}05` : `${COLORS.white}`,
-            }}
-          >
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".csv"
-              onChange={handleFileChange}
-              className="hidden"
-              id="file-upload"
-            />
-            <label htmlFor="file-upload" className="cursor-pointer">
-              <div
-                className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-4 transition-all duration-300 hover:scale-110"
-                style={{
-                  background: `linear-gradient(135deg, ${COLORS.primary}, ${COLORS.secondary})`,
-                  boxShadow: `0 8px 32px ${COLORS.primary}30`,
-                }}
-              >
-                {file ? <CheckCircle className="w-10 h-10 text-white" /> : <Upload className="w-10 h-10 text-white" />}
-              </div>
-              <p className="text-lg mb-2 font-semibold" style={{ color: COLORS.textHeader }}>
-                {file ? file.name : 'Click to upload or drag and drop'}
-              </p>
-              <p className="text-sm" style={{ color: COLORS.textBody }}>
-                CSV files only (Max 10MB)
-              </p>
-            </label>
-          </div>
-
-          {/* File Info */}
-          {file && (
+        <div
+          className="border-2 border-dashed rounded-2xl p-12 text-center transition-all duration-300 hover:shadow-lg cursor-pointer bg-white"
+          style={{
+            borderColor: file ? COLORS.primary : `${COLORS.primary}30`,
+            backgroundColor: file ? `${COLORS.primary}05` : `${COLORS.white}`,
+          }}
+        >
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".csv"
+            onChange={handleFileChange}
+            className="hidden"
+            id="file-upload"
+          />
+          <label htmlFor="file-upload" className="cursor-pointer">
             <div
-              className="flex items-center justify-between rounded-xl p-4 border transition-all duration-300 hover:shadow-md bg-white"
+              className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-4 transition-all duration-300 hover:scale-110"
               style={{
-                borderColor: `${COLORS.primary}30`,
+                background: `linear-gradient(135deg, ${COLORS.primary}, ${COLORS.secondary})`,
+                boxShadow: `0 8px 32px ${COLORS.primary}30`,
               }}
             >
-              <div className="flex items-center space-x-3">
-                <div
-                  className="p-2 rounded-lg"
-                  style={{ backgroundColor: `${COLORS.primary}10` }}
-                >
-                  <FileText className="w-5 h-5" style={{ color: COLORS.primary }} />
-                </div>
-                <div>
-                  <p className="font-bold" style={{ color: COLORS.textHeader }}>{file.name}</p>
-                  <p className="text-sm" style={{ color: COLORS.textBody }}>
-                    {(file.size / 1024).toFixed(2)} KB
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => {
-                  setFile(null);
-                  if (fileInputRef.current) fileInputRef.current.value = '';
-                }}
-                className="p-2 rounded-lg hover:bg-slate-100 transition-colors"
-                style={{ color: COLORS.textBody }}
-              >
-                <X className="w-5 h-5" />
-              </button>
+              {file ? <CheckCircle className="w-10 h-10 text-white" /> : <Upload className="w-10 h-10 text-white" />}
             </div>
-          )}
-
-          {/* Manual Upload Button */}
-          <button
-            onClick={handleCsvUpload}
-            disabled={!file || uploading}
-            className="w-full py-4 rounded-xl font-bold transition-all duration-300 hover:scale-[1.02] hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center space-x-2 text-white"
-            style={{
-              background: `linear-gradient(135deg, ${COLORS.primary}, ${COLORS.secondary})`,
-              boxShadow: `0 8px 32px ${COLORS.primary}40`,
-            }}
-          >
-            {uploading ? (
-              <>
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                <span>Processing CSV...</span>
-              </>
-            ) : (
-              <>
-                <Upload className="w-5 h-5" />
-                <span>Upload and Process</span>
-              </>
-            )}
-          </button>
-
-          {/* Guidelines */}
-          <div
-            className="rounded-2xl p-6 border transition-all duration-300 hover:shadow-md bg-white"
-            style={{
-              borderColor: `${COLORS.primary}20`,
-            }}
-          >
-            <div className="flex items-center space-x-2 mb-4">
-              <Sparkles className="w-5 h-5" style={{ color: COLORS.gold }} />
-              <h3 className="font-bold" style={{ color: COLORS.textHeader }}>CSV Format Guidelines:</h3>
-            </div>
-            <ul className="text-sm space-y-2 font-medium" style={{ color: COLORS.textBody }}>
-              <li>• Include headers: name, email, phone, outstanding_amount, days_overdue</li>
-              <li>• Each row represents one customer</li>
-              <li>• Amount should be numeric in INR</li>
-              <li>• Days overdue should be an integer</li>
-            </ul>
-          </div>
+            <p className="text-lg mb-2 font-semibold" style={{ color: isDarkMode ? '#e6eef8' : COLORS.textHeader }}>
+              {file ? file.name : 'Click to upload or drag and drop'}
+            </p>
+            <p className="text-sm" style={{ color: isDarkMode ? '#b8c5d0' : COLORS.textBody }}>
+              CSV files only (Max 10MB)
+            </p>
+          </label>
         </div>
+
+        {/* File Info */}
+        {file && (
+          <div
+            className="flex items-center justify-between rounded-xl p-4 border transition-all duration-300 hover:shadow-md bg-white"
+            style={{
+              borderColor: `${COLORS.primary}30`,
+            }}
+          >
+            <div className="flex items-center space-x-3">
+              <div
+                className="p-2 rounded-lg"
+                style={{ backgroundColor: `${COLORS.primary}10` }}
+              >
+                <FileText className="w-5 h-5" style={{ color: COLORS.primary }} />
+              </div>
+              <div>
+                <p className="font-bold" style={{ color: isDarkMode ? '#e6eef8' : COLORS.textHeader }}>{file.name}</p>
+                <p className="text-sm" style={{ color: isDarkMode ? '#b8c5d0' : COLORS.textBody }}>
+                  {(file.size / 1024).toFixed(2)} KB
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => {
+                setFile(null);
+                if (fileInputRef.current) fileInputRef.current.value = '';
+              }}
+              className="p-2 rounded-lg hover:bg-slate-100 transition-colors"
+              style={{ color: COLORS.textBody }}
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+        )}
+
+        {/* Manual Upload Button */}
+        <button
+          onClick={handleCsvUpload}
+          disabled={!file || uploading}
+          className="w-full py-4 rounded-xl font-bold transition-all duration-300 hover:scale-[1.02] hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center space-x-2 text-white"
+          style={{
+            background: `linear-gradient(135deg, ${COLORS.primary}, ${COLORS.secondary})`,
+            boxShadow: `0 8px 32px ${COLORS.primary}40`,
+          }}
+        >
+          {uploading ? (
+            <>
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              <span>Processing CSV...</span>
+            </>
+          ) : (
+            <>
+              <Upload className="w-5 h-5" />
+              <span>Upload and Process</span>
+            </>
+          )}
+        </button>
+
+        {/* Guidelines */}
+        <div
+          className="rounded-2xl p-6 border transition-all duration-300 hover:shadow-md bg-white"
+          style={{
+            borderColor: `${COLORS.primary}20`,
+          }}
+        >
+          <div className="flex items-center space-x-2 mb-4">
+            <Sparkles className="w-5 h-5" style={{ color: COLORS.gold }} />
+            <h3 className="font-bold" style={{ color: isDarkMode ? '#e6eef8' : COLORS.textHeader }}>CSV Format Guidelines:</h3>
+          </div>
+          <ul className="text-sm space-y-2 font-medium" style={{ color: isDarkMode ? '#b8c5d0' : COLORS.textBody }}>
+            <li>• Include headers: name, email, phone, outstanding_amount, days_overdue</li>
+            <li>• Each row represents one customer</li>
+            <li>• Amount should be numeric in INR</li>
+            <li>• Days overdue should be an integer</li>
+          </ul>
+        </div>
+      </div>
 
       {/* Messages */}
       {error && (

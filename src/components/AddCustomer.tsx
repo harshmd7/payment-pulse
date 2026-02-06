@@ -17,9 +17,10 @@ const COLORS = {
 
 interface AddCustomerProps {
   onCustomerAdded: () => void;
+  isDarkMode?: boolean;
 }
 
-export default function AddCustomer({ onCustomerAdded }: AddCustomerProps) {
+export default function AddCustomer({ onCustomerAdded, isDarkMode = false }: AddCustomerProps) {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -93,7 +94,7 @@ export default function AddCustomer({ onCustomerAdded }: AddCustomerProps) {
         outstanding_amount: '',
         days_overdue: '',
       });
-      
+
       setTimeout(() => {
         onCustomerAdded();
       }, 1500);
@@ -122,12 +123,12 @@ export default function AddCustomer({ onCustomerAdded }: AddCustomerProps) {
       <div>
         <div className="flex items-center space-x-2 mb-4">
           <div className="w-2 h-8 rounded-full" style={{ backgroundColor: COLORS.primary }} />
-          <h2 className="text-2xl font-bold" style={{ color: COLORS.dark }}>
+          <h2 className="text-2xl font-bold" style={{ color: isDarkMode ? '#e6eef8' : COLORS.dark }}>
             Add New Customer
           </h2>
           <div className="w-2 h-8 rounded-full" style={{ backgroundColor: COLORS.primary }} />
         </div>
-        <p style={{ color: COLORS.secondary }}>
+        <p style={{ color: isDarkMode ? '#b8c5d0' : COLORS.secondary }}>
           Manually add a new customer to the system
         </p>
       </div>
@@ -144,7 +145,7 @@ export default function AddCustomer({ onCustomerAdded }: AddCustomerProps) {
           <div className="space-y-4">
             {/* Customer Name */}
             <div>
-              <label className="block text-sm font-semibold mb-2" style={{ color: COLORS.dark }}>
+              <label className="block text-sm font-semibold mb-2" style={{ color: isDarkMode ? '#e6eef8' : COLORS.dark }}>
                 Customer Name <span className="text-red-500">*</span>
               </label>
               <input
@@ -164,7 +165,7 @@ export default function AddCustomer({ onCustomerAdded }: AddCustomerProps) {
 
             {/* Email */}
             <div>
-              <label className="block text-sm font-semibold mb-2" style={{ color: COLORS.dark }}>
+              <label className="block text-sm font-semibold mb-2" style={{ color: isDarkMode ? '#e6eef8' : COLORS.dark }}>
                 Email Address
               </label>
               <input
@@ -183,7 +184,7 @@ export default function AddCustomer({ onCustomerAdded }: AddCustomerProps) {
 
             {/* Phone */}
             <div>
-              <label className="block text-sm font-semibold mb-2" style={{ color: COLORS.dark }}>
+              <label className="block text-sm font-semibold mb-2" style={{ color: isDarkMode ? '#e6eef8' : COLORS.dark }}>
                 Phone Number
               </label>
               <input
@@ -202,7 +203,7 @@ export default function AddCustomer({ onCustomerAdded }: AddCustomerProps) {
 
             {/* Outstanding Amount */}
             <div>
-              <label className="block text-sm font-semibold mb-2" style={{ color: COLORS.dark }}>
+              <label className="block text-sm font-semibold mb-2" style={{ color: isDarkMode ? '#e6eef8' : COLORS.dark }}>
                 Outstanding Amount (₹)
               </label>
               <input
@@ -223,7 +224,7 @@ export default function AddCustomer({ onCustomerAdded }: AddCustomerProps) {
 
             {/* Days Overdue */}
             <div>
-              <label className="block text-sm font-semibold mb-2" style={{ color: COLORS.dark }}>
+              <label className="block text-sm font-semibold mb-2" style={{ color: isDarkMode ? '#e6eef8' : COLORS.dark }}>
                 Days Overdue
               </label>
               <input
@@ -326,8 +327,8 @@ export default function AddCustomer({ onCustomerAdded }: AddCustomerProps) {
         <div className="flex items-start space-x-3">
           <UserPlus className="w-5 h-5 mt-0.5" style={{ color: COLORS.primary }} />
           <div>
-            <h3 className="font-semibold mb-2" style={{ color: COLORS.dark }}>Manual Entry Guidelines:</h3>
-            <ul className="text-sm space-y-2" style={{ color: COLORS.secondary }}>
+            <h3 className="font-semibold mb-2" style={{ color: isDarkMode ? '#e6eef8' : COLORS.dark }}>Manual Entry Guidelines:</h3>
+            <ul className="text-sm space-y-2" style={{ color: isDarkMode ? '#b8c5d0' : COLORS.secondary }}>
               <li>• Customer name is required, all other fields are optional</li>
               <li>• Risk score will be calculated automatically based on outstanding amount and days overdue</li>
               <li>• Email and phone number can be added later if not available</li>
