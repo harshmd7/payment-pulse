@@ -5,9 +5,10 @@ import { X, Brain, Loader, AlertCircle, CheckCircle, TrendingUp, Phone, Mail, Me
 interface CustomerAnalysisProps {
   customer: Customer;
   onClose: () => void;
+  inline?: boolean;
 }
 
-export default function CustomerAnalysis({ customer, onClose }: CustomerAnalysisProps) {
+export default function CustomerAnalysis({ customer, onClose, inline = false }: CustomerAnalysisProps) {
   const [analyzing, setAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState<any>(null);
   const [error, setError] = useState('');
@@ -183,9 +184,17 @@ export default function CustomerAnalysis({ customer, onClose }: CustomerAnalysis
     return actions;
   };
 
+  const wrapperClass = inline
+    ? 'mt-4 w-full'
+    : 'fixed inset-0 bg-black/0 z-50 flex items-start justify-center p-4';
+
+  const modalClass = inline
+    ? 'bg-slate-900 rounded-2xl border border-slate-700 w-full overflow-y-auto'
+    : 'bg-slate-900 rounded-2xl border border-slate-700 max-w-4xl w-full max-h-[90vh] overflow-y-auto';
+
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-slate-900 rounded-2xl border border-slate-700 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+    <div className={wrapperClass}>
+      <div className={modalClass}>
         <div className="sticky top-0 bg-slate-900 border-b border-slate-700 p-6 flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-400 rounded-lg flex items-center justify-center">

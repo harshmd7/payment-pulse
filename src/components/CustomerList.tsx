@@ -98,10 +98,8 @@ export default function CustomerList({ customers, loading, onRefresh }: Customer
           </div>
         ) : (
           filteredCustomers.map((customer) => (
-            <div
-              key={customer.id}
-              className="bg-slate-900/50 rounded-xl border border-slate-700 p-6 hover:border-blue-500/50 transition-all"
-            >
+            <div key={customer.id}>
+              <div className="bg-slate-900/50 rounded-xl border border-slate-700 p-6 hover:border-blue-500/50 transition-all">
               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                 <div className="flex-1 space-y-3">
                   <div className="flex items-start justify-between">
@@ -170,21 +168,27 @@ export default function CustomerList({ customers, loading, onRefresh }: Customer
                   </button>
                 </div>
               </div>
+
+              {showAnalysis && selectedCustomer?.id === customer.id && (
+                <div className="mt-4">
+                  <CustomerAnalysis
+                    customer={selectedCustomer}
+                    onClose={() => {
+                      setShowAnalysis(false);
+                      setSelectedCustomer(null);
+                      onRefresh();
+                    }}
+                    inline
+                  />
+                </div>
+              )}
+            </div>
             </div>
           ))
         )}
       </div>
 
-      {showAnalysis && selectedCustomer && (
-        <CustomerAnalysis
-          customer={selectedCustomer}
-          onClose={() => {
-            setShowAnalysis(false);
-            setSelectedCustomer(null);
-            onRefresh();
-          }}
-        />
-      )}
+      
     </div>
   );
 }
