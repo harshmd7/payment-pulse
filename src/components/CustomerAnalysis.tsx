@@ -5,6 +5,7 @@ import {
   Activity, Sparkles, ShieldCheck, Trophy
 } from 'lucide-react';
 import { calculateAdvancedRiskScore, getRiskScoreExplanation, getRiskCategory } from '../utils/riskScoreCalculator';
+import PaymentActions from './PaymentActions';
 
 const COLORS = {
   primary: '#1b4079',
@@ -48,14 +49,14 @@ export default function CustomerAnalysis({ customer, onClose, inline = false }: 
       const aiInsights = generateAIInsights(customer);
       const riskAssessment = generateRiskAssessment(customer);
       const recommendedActions = generateRecommendedActions(customer);
-      
+
       // Calculate confidence score based on data completeness and days overdue severity
       const advancedScore = calculateAdvancedRiskScore({
         daysOverdue: customer.days_overdue,
         outstandingAmount: Number(customer.outstanding_amount),
         isFirstDefault: true,
       });
-      
+
       // Confidence: Higher for extreme scores (very clear), lower for moderate (more uncertain)
       const confidenceScore = Math.abs(advancedScore - 50) >= 20 ? 92 : 85;
 
@@ -90,63 +91,73 @@ export default function CustomerAnalysis({ customer, onClose, inline = false }: 
     const advancedScore = calculateAdvancedRiskScore({
       daysOverdue: customer.days_overdue,
       outstandingAmount: Number(customer.outstanding_amount),
-      isFirstDefault: true, // We don't have history in this view
+      isFirstDefault: true,
     });
 
     const riskCategory = getRiskCategory(advancedScore);
     const insights: string[] = [];
+    const amount = Number(customer.outstanding_amount);
+    const days = customer.days_overdue;
 
-    // Primary insight based on days overdue
-    if (customer.days_overdue > 90) {
-      insights.push(`Critical: Payment is ${customer.days_overdue} days overdue (3+ months)`);
-      insights.push('This indicates serious financial difficulty or willful non-payment');
-      insights.push('High probability of needing legal intervention if unresolved');
-    } else if (customer.days_overdue > 60) {
-      insights.push(`Severe: Payment is ${customer.days_overdue} days overdue (2 months)`);
-      insights.push('Customer has clearly abandoned payment obligations');
-      insights.push('Immediate escalation and structured recovery plan needed');
-    } else if (customer.days_overdue > 30) {
-      insights.push(`Serious: Payment is ${customer.days_overdue} days overdue (1+ month)`);
-      insights.push('Payment pattern shows clear default, not mere delays');
-      insights.push('Personalized agent contact required immediately');
-    } else if (customer.days_overdue > 7) {
-      insights.push(`Late: Payment is ${customer.days_overdue} days overdue`);
-      insights.push('Timely intervention can prevent further escalation');
-      insights.push('Friendly reminder may be sufficient');
-    } else if (customer.days_overdue > 0) {
-      insights.push(`Minor delay: Payment is ${customer.days_overdue} days overdue`);
-      insights.push('Could be processing delay, likely to resolve on its own');
-      insights.push('Automated notification should suffice');
+    // Behavioral Analysis Logic
+    // We analyze the intersection of time overdue and amount to determine reliability
+
+    if (days > 90) {
+      insights.push(`⛔ Behavioral Pattern: Chronic Delinquency`);
+      insights.push(`Customer has exceeded the 90-day critical threshold, indicating a fundamental breakdown in payment discipline.`);
+      insights.push(`Statistically, recovery probability drops below 40% at this stage.`);
+    } else if (days > 60) {
+      insights.push(`⚠️ Behavioral Pattern: Severe Avoidance`);
+      insights.push(`Customer is displaying avoidance behaviors. Is unresponsive to standard billing cycles.`);
+      insights.push(`Payment gaps are becoming structural rather than situational.`);
+    } else if (days > 30) {
+      insights.push(`📉 Behavioral Pattern: Inconsistent Payer`);
+      insights.push(`Customer misses standard cycles but may pay with pressure.`);
+      insights.push(`Reliability is degrading. Monitor closely for escalation.`);
+    } else if (days > 7) {
+      insights.push(`⏱️ Behavioral Pattern: Late Payer`);
+      insights.push(`Customer regularly pushes payment boundaries but remains within recovery windows.`);
+      insights.push(`Likely essentially solvent but disorganized or prioritizing other creditors.`);
     } else {
-      insights.push('✓ Payment is on-time');
-      insights.push('No immediate action required');
-      insights.push('Customer maintains good standing');
+      insights.push(`✅ Behavioral Pattern: Reliable`);
+      insights.push(`Customer adheres to payment schedules.`);
+      insights.push(`Low volatility in payment behavior.`);
     }
 
-    // Secondary insight based on outstanding amount
-    if (Number(customer.outstanding_amount) > 50000) {
-      insights.push(`High-value account: ₹${Number(customer.outstanding_amount).toLocaleString()}`);
-      insights.push('Deserves priority handling and executive attention');
-    } else if (Number(customer.outstanding_amount) > 10000) {
-      insights.push(`Significant outstanding: ₹${Number(customer.outstanding_amount).toLocaleString()}`);
-      insights.push('Requires dedicated follow-up to prevent write-off');
+    // Financial Reliability Context
+    if (amount > 50000 && days > 30) {
+      insights.push(`High Exposure Risk: Large outstanding balance combined with delays indicates significant capital risk.`);
+    }
+
+    // Future Credit Recommendation Logic
+    let creditRecommendation = '';
+    let creditStatus = '';
+
+    if (advancedScore >= 80) {
+      creditStatus = '⛔ CREDIT FREEZE RECOMMENDED';
+      creditRecommendation = 'Do not extend further credit. Immediate liability reduction required.';
+    } else if (advancedScore >= 60) {
+      creditStatus = '⚠️ CONDITIONAL CREDIT ONLY';
+      creditRecommendation = 'Restrict new credit lines. Require 50% upfront for future services.';
+    } else if (advancedScore >= 30) {
+      creditStatus = '🔍 MONITOR CLOSELY';
+      creditRecommendation = 'Maintain current limits but flag for review if delays persist > 7 days.';
+    } else {
+      creditStatus = '✅ APPROVED FOR CREDIT';
+      creditRecommendation = 'Customer demonstrates reliable payment behavior. Eligible for standard or increased credit lines.';
     }
 
     return {
       summary: `${riskCategory.label}: ${riskCategory.description}`,
       details: insights,
-      emotional_indicators: 
-        advancedScore >= 70 
-          ? 'Likely financial hardship or intentional avoidance' 
-          : advancedScore >= 40 
-          ? 'May be temporary cash flow issues - responsive to communication'
-          : 'Good financial standing - reliable payer',
-      engagement_readiness: 
-        advancedScore >= 70 
-          ? 'Low - may require legal approach' 
-          : advancedScore >= 40 
-          ? 'Moderate - responsive to structured offers'
-          : 'High - likely self-resolving',
+      credit_status: creditStatus,
+      credit_recommendation: creditRecommendation,
+      engagement_readiness:
+        advancedScore >= 70
+          ? 'Low - likely requires firm negotiation'
+          : advancedScore >= 40
+            ? 'Moderate - open to restructuring'
+            : 'High - relationship preservation priority',
     };
   };
 
@@ -161,29 +172,29 @@ export default function CustomerAnalysis({ customer, onClose, inline = false }: 
     const riskCategory = getRiskCategory(advancedScore);
 
     // Calculate individual component scores for detailed breakdown
-    const daysScore = Math.min(70, Math.max(0, 
+    const daysScore = Math.min(70, Math.max(0,
       customer.days_overdue <= 0 ? 0 :
-      customer.days_overdue <= 7 ? 10 :
-      customer.days_overdue <= 30 ? 20 + (customer.days_overdue - 7) * 0.3 :
-      customer.days_overdue <= 60 ? 35 + (customer.days_overdue - 30) * 0.6 :
-      customer.days_overdue <= 90 ? 55 + (customer.days_overdue - 60) * 0.5 :
-      70
+        customer.days_overdue <= 7 ? 10 :
+          customer.days_overdue <= 30 ? 20 + (customer.days_overdue - 7) * 0.3 :
+            customer.days_overdue <= 60 ? 35 + (customer.days_overdue - 30) * 0.6 :
+              customer.days_overdue <= 90 ? 55 + (customer.days_overdue - 60) * 0.5 :
+                70
     ));
 
     const amountScore = Number(customer.outstanding_amount) < 1000 ? 10 :
       Number(customer.outstanding_amount) < 5000 ? 25 :
-      Number(customer.outstanding_amount) < 10000 ? 40 :
-      Number(customer.outstanding_amount) < 50000 ? 65 : 90;
+        Number(customer.outstanding_amount) < 10000 ? 40 :
+          Number(customer.outstanding_amount) < 50000 ? 65 : 90;
 
-    const recoveryProbability = 
+    const recoveryProbability =
       advancedScore >= 70 ? '35-50%' :
-      advancedScore >= 40 ? '60-75%' :
-      '85-95%';
+        advancedScore >= 40 ? '60-75%' :
+          '85-95%';
 
-    const recoveryTime = 
+    const recoveryTime =
       advancedScore >= 70 ? '90-180+ days' :
-      advancedScore >= 40 ? '30-60 days' :
-      '7-30 days';
+        advancedScore >= 40 ? '30-60 days' :
+          '7-30 days';
 
     return {
       overall_score: advancedScore,
@@ -437,6 +448,9 @@ export default function CustomerAnalysis({ customer, onClose, inline = false }: 
             </div>
           </div>
 
+          {/* Payment Actions Section */}
+          <PaymentActions customer={customer} onActionComplete={() => { }} />
+
           {analyzing && (
             <div className="flex flex-col items-center justify-center py-12">
               <Loader className="w-12 h-12 animate-spin mb-4" style={{ color: COLORS.primary }} />
@@ -498,9 +512,9 @@ export default function CustomerAnalysis({ customer, onClose, inline = false }: 
                 </div>
                 <div className="grid grid-cols-2 gap-4 mt-4 pt-4 border-t" style={{ borderColor: `${COLORS.primary}20` }}>
                   <div className="p-3 rounded-lg" style={{ backgroundColor: 'white' }}>
-                    <p className="text-xs mb-1" style={{ color: COLORS.secondary }}>Emotional State</p>
+                    <p className="text-xs mb-1" style={{ color: COLORS.secondary }}>Credit Eligibility</p>
                     <p className="text-sm font-semibold" style={{ color: COLORS.dark }}>
-                      {analysis.ai_insights.emotional_indicators}
+                      {analysis.ai_insights.credit_status}
                     </p>
                   </div>
                   <div className="p-3 rounded-lg" style={{ backgroundColor: 'white' }}>
@@ -509,6 +523,12 @@ export default function CustomerAnalysis({ customer, onClose, inline = false }: 
                       {analysis.ai_insights.engagement_readiness}
                     </p>
                   </div>
+                </div>
+
+                {/* Detailed Credit Recommendation */}
+                <div className="mt-4 p-3 rounded-lg border border-dashed" style={{ borderColor: `${COLORS.primary}40`, backgroundColor: `${COLORS.primary}05` }}>
+                  <p className="text-xs font-semibold mb-1" style={{ color: COLORS.primary }}>Strategy Recommendation:</p>
+                  <p className="text-sm italic" style={{ color: COLORS.secondary }}>"{analysis.ai_insights.credit_recommendation}"</p>
                 </div>
               </div>
 

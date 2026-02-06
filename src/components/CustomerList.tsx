@@ -59,6 +59,67 @@ export default function CustomerList({ customers, loading, onRefresh, isDarkMode
   const [deleting, setDeleting] = useState(false);
   const [updating, setUpdating] = useState(false);
 
+  // Bulk Selection State
+  const [selectedCustomers, setSelectedCustomers] = useState<Set<string>>(new Set());
+
+
+
+  // Bulk Delete
+  const handleBulkDelete = async () => {
+    if (!window.confirm(`Are you sure you want to delete ${selectedCustomers.size} customers?`)) return;
+
+    setDeleting(true);
+    try {
+      const allIds = Array.from(selectedCustomers);
+      const batchSize = 20; // Supabase/URL limit safety
+
+      for (let i = 0; i < allIds.length; i += batchSize) {
+        const batch = allIds.slice(i, i + batchSize);
+        console.log(`Deleting batch ${i / batchSize + 1} of ${Math.ceil(allIds.length / batchSize)}`);
+
+        const { error } = await supabase
+          .from('customers')
+          .delete()
+          .in('id', batch);
+
+        if (error) throw error;
+      }
+
+      setSelectedCustomers(new Set());
+      onRefresh();
+    } catch (error) {
+      console.error('Error deleting customers:', error);
+      alert('Failed to delete some customers. Please check console.');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  // Handle Select by Filter
+  const handleSelectByFilter = (criteria: string) => {
+    let toSelect: string[] = [];
+
+    switch (criteria) {
+      case 'all':
+        toSelect = filteredCustomers.map((c: any) => c.id);
+        break;
+      case 'none':
+        toSelect = [];
+        break;
+      case 'high_risk':
+        toSelect = filteredCustomers.filter((c: any) => getRiskCategory(c.calculatedScore).category === 'high_risk').map((c: any) => c.id);
+        break;
+      case 'moderate_risk':
+        toSelect = filteredCustomers.filter((c: any) => getRiskCategory(c.calculatedScore).category === 'moderate_risk').map((c: any) => c.id);
+        break;
+      case 'low_risk':
+        toSelect = filteredCustomers.filter((c: any) => getRiskCategory(c.calculatedScore).category === 'low_risk').map((c: any) => c.id);
+        break;
+    }
+
+    setSelectedCustomers(new Set(toSelect));
+  };
+
   type CustomerWithScore = Customer & { calculatedScore: number };
 
   const filteredCustomers = (customers as Customer[])
@@ -242,6 +303,45 @@ export default function CustomerList({ customers, loading, onRefresh, isDarkMode
         </select>
       </div>
 
+      {/* Bulk Actions Toolbar */}
+      <div className="flex items-center justify-between px-2 bg-opacity-50 rounded-lg p-2"
+        style={{ backgroundColor: selectedCustomers.size > 0 ? `${COLORS.primary}10` : 'transparent' }}>
+        <div className="flex items-center gap-3">
+          <select
+            onChange={(e) => {
+              handleSelectByFilter(e.target.value);
+              e.target.value = 'none'; // Reset dropdown
+            }}
+            className="px-3 py-1.5 rounded-lg text-sm border focus:outline-none cursor-pointer hover:bg-gray-50 bg-white"
+            style={{ borderColor: `${COLORS.primary}40`, color: COLORS.secondary }}
+            defaultValue="none"
+          >
+            <option value="none" disabled>Select Options</option>
+            <option value="all">All</option>
+            <option value="none">None</option>
+            <option value="high_risk">High Risk</option>
+            <option value="moderate_risk">Moderate Risk</option>
+            <option value="low_risk">Low Risk</option>
+          </select>
+          <span className="text-sm font-medium" style={{ color: COLORS.secondary }}>
+            {selectedCustomers.size > 0 ? `${selectedCustomers.size} selected` : ''}
+          </span>
+        </div>
+
+
+        {selectedCustomers.size > 0 && (
+          <button
+            onClick={handleBulkDelete}
+            disabled={deleting}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all hover:scale-105"
+            style={{ backgroundColor: COLORS.danger, color: 'white' }}
+          >
+            {deleting ? <Loader className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+            Delete Selected
+          </button>
+        )}
+      </div>
+
       {/* Customer Cards */}
       <div className="space-y-4">
         {filteredCustomers.length === 0 ? (
@@ -262,12 +362,18 @@ export default function CustomerList({ customers, loading, onRefresh, isDarkMode
                 <div
                   className="rounded-2xl border p-6 transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
                   style={{
-                    backgroundColor: isDarkMode ? `${COLORS.primary}12` : 'white',
-                    borderColor: `${COLORS.accent1}30`,
+                    backgroundColor: selectedCustomers.has(customer.id)
+                      ? (isDarkMode ? `${COLORS.primary}25` : `${COLORS.primary}10`)
+                      : (isDarkMode ? `${COLORS.primary}12` : 'white'),
+                    borderColor: selectedCustomers.has(customer.id)
+                      ? COLORS.primary
+                      : `${COLORS.accent1}30`,
                     boxShadow: `0 4px 20px ${COLORS.primary}10`,
                   }}
                 >
                   <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+
+
                     <div className="flex-1 space-y-3">
                       <div className="flex items-start justify-between">
                         <div>
@@ -464,8 +570,8 @@ export default function CustomerList({ customers, loading, onRefresh, isDarkMode
                                         ? `${COLORS.success}15`
                                         : `${COLORS.warning}15`,
                                     border: `1px solid ${transaction.status === 'Paid'
-                                        ? `${COLORS.success}30`
-                                        : `${COLORS.warning}30`
+                                      ? `${COLORS.success}30`
+                                      : `${COLORS.warning}30`
                                       }`,
                                   }}
                                 >
@@ -491,8 +597,8 @@ export default function CustomerList({ customers, loading, onRefresh, isDarkMode
                                       : `${COLORS.warning}20`,
                                   color: transaction.status === 'Paid' ? COLORS.success : COLORS.warning,
                                   border: `1px solid ${transaction.status === 'Paid'
-                                      ? `${COLORS.success}30`
-                                      : `${COLORS.warning}30`
+                                    ? `${COLORS.success}30`
+                                    : `${COLORS.warning}30`
                                     }`,
                                 }}
                               >
@@ -512,212 +618,216 @@ export default function CustomerList({ customers, loading, onRefresh, isDarkMode
       </div>
 
       {/* Edit Modal */}
-      {showEditModal && selectedCustomer && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-          <div
-            className="bg-white rounded-2xl max-w-2xl w-full p-6"
-            style={{
-              backgroundColor: isDarkMode ? COLORS.dark : 'white',
-              border: `1px solid ${COLORS.primary}20`,
-            }}
-          >
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold" style={{ color: isDarkMode ? '#e6eef8' : COLORS.dark }}>
-                Edit Customer
-              </h2>
-              <button
-                onClick={() => setShowEditModal(false)}
-                className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
-              >
-                <X className="w-6 h-6" style={{ color: COLORS.secondary }} />
-              </button>
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-semibold mb-2" style={{ color: isDarkMode ? '#e6eef8' : COLORS.dark }}>
-                  Name
-                </label>
-                <input
-                  type="text"
-                  value={editFormData.name || ''}
-                  onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl border focus:outline-none"
-                  style={{
-                    borderColor: `${COLORS.primary}30`,
-                  }}
-                />
+      {
+        showEditModal && selectedCustomer && (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+            <div
+              className="bg-white rounded-2xl max-w-2xl w-full p-6"
+              style={{
+                backgroundColor: isDarkMode ? COLORS.dark : 'white',
+                border: `1px solid ${COLORS.primary}20`,
+              }}
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold" style={{ color: isDarkMode ? '#e6eef8' : COLORS.dark }}>
+                  Edit Customer
+                </h2>
+                <button
+                  onClick={() => setShowEditModal(false)}
+                  className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  <X className="w-6 h-6" style={{ color: COLORS.secondary }} />
+                </button>
               </div>
 
-              <div>
-                <label className="block text-sm font-semibold mb-2" style={{ color: isDarkMode ? '#e6eef8' : COLORS.dark }}>
-                  Email
-                </label>
-                <input
-                  type="email"
-                  value={editFormData.email || ''}
-                  onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl border focus:outline-none"
-                  style={{
-                    borderColor: `${COLORS.primary}30`,
-                  }}
-                />
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-semibold mb-2" style={{ color: isDarkMode ? '#e6eef8' : COLORS.dark }}>
+                    Name
+                  </label>
+                  <input
+                    type="text"
+                    value={editFormData.name || ''}
+                    onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                    className="w-full px-4 py-3 rounded-xl border focus:outline-none"
+                    style={{
+                      borderColor: `${COLORS.primary}30`,
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold mb-2" style={{ color: isDarkMode ? '#e6eef8' : COLORS.dark }}>
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    value={editFormData.email || ''}
+                    onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })}
+                    className="w-full px-4 py-3 rounded-xl border focus:outline-none"
+                    style={{
+                      borderColor: `${COLORS.primary}30`,
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold mb-2" style={{ color: isDarkMode ? '#e6eef8' : COLORS.dark }}>
+                    Phone
+                  </label>
+                  <input
+                    type="tel"
+                    value={editFormData.phone || ''}
+                    onChange={(e) => setEditFormData({ ...editFormData, phone: e.target.value })}
+                    className="w-full px-4 py-3 rounded-xl border focus:outline-none"
+                    style={{
+                      borderColor: `${COLORS.primary}30`,
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold mb-2" style={{ color: isDarkMode ? '#e6eef8' : COLORS.dark }}>
+                    Outstanding Amount (₹)
+                  </label>
+                  <input
+                    type="number"
+                    value={editFormData.outstanding_amount || ''}
+                    onChange={(e) => setEditFormData({ ...editFormData, outstanding_amount: parseFloat(e.target.value) })}
+                    className="w-full px-4 py-3 rounded-xl border focus:outline-none"
+                    style={{
+                      borderColor: `${COLORS.primary}30`,
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold mb-2" style={{ color: isDarkMode ? '#e6eef8' : COLORS.dark }}>
+                    Days Overdue
+                  </label>
+                  <input
+                    type="number"
+                    value={editFormData.days_overdue || ''}
+                    onChange={(e) => setEditFormData({ ...editFormData, days_overdue: parseInt(e.target.value) })}
+                    className="w-full px-4 py-3 rounded-xl border focus:outline-none"
+                    style={{
+                      borderColor: `${COLORS.primary}30`,
+                    }}
+                  />
+                </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-semibold mb-2" style={{ color: isDarkMode ? '#e6eef8' : COLORS.dark }}>
-                  Phone
-                </label>
-                <input
-                  type="tel"
-                  value={editFormData.phone || ''}
-                  onChange={(e) => setEditFormData({ ...editFormData, phone: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl border focus:outline-none"
+              <div className="mt-6 flex space-x-3">
+                <button
+                  onClick={handleUpdateCustomer}
+                  disabled={updating}
+                  className="flex-1 py-3 rounded-xl font-semibold transition-all duration-300 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
                   style={{
-                    borderColor: `${COLORS.primary}30`,
+                    background: `linear-gradient(135deg, ${COLORS.primary}, ${COLORS.secondary})`,
+                    color: 'white',
                   }}
-                />
-              </div>
+                >
+                  {updating ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <span>Updating...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-5 h-5" />
+                      <span>Update Customer</span>
+                    </>
+                  )}
+                </button>
 
-              <div>
-                <label className="block text-sm font-semibold mb-2" style={{ color: isDarkMode ? '#e6eef8' : COLORS.dark }}>
-                  Outstanding Amount (₹)
-                </label>
-                <input
-                  type="number"
-                  value={editFormData.outstanding_amount || ''}
-                  onChange={(e) => setEditFormData({ ...editFormData, outstanding_amount: parseFloat(e.target.value) })}
-                  className="w-full px-4 py-3 rounded-xl border focus:outline-none"
+                <button
+                  onClick={() => setShowEditModal(false)}
+                  disabled={updating}
+                  className="px-6 py-3 rounded-xl font-semibold transition-all duration-300 hover:scale-[1.02] disabled:opacity-50"
                   style={{
-                    borderColor: `${COLORS.primary}30`,
+                    backgroundColor: `${COLORS.secondary}15`,
+                    border: `1px solid ${COLORS.secondary}30`,
+                    color: COLORS.secondary,
                   }}
-                />
+                >
+                  Cancel
+                </button>
               </div>
-
-              <div>
-                <label className="block text-sm font-semibold mb-2" style={{ color: isDarkMode ? '#e6eef8' : COLORS.dark }}>
-                  Days Overdue
-                </label>
-                <input
-                  type="number"
-                  value={editFormData.days_overdue || ''}
-                  onChange={(e) => setEditFormData({ ...editFormData, days_overdue: parseInt(e.target.value) })}
-                  className="w-full px-4 py-3 rounded-xl border focus:outline-none"
-                  style={{
-                    borderColor: `${COLORS.primary}30`,
-                  }}
-                />
-              </div>
-            </div>
-
-            <div className="mt-6 flex space-x-3">
-              <button
-                onClick={handleUpdateCustomer}
-                disabled={updating}
-                className="flex-1 py-3 rounded-xl font-semibold transition-all duration-300 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
-                style={{
-                  background: `linear-gradient(135deg, ${COLORS.primary}, ${COLORS.secondary})`,
-                  color: 'white',
-                }}
-              >
-                {updating ? (
-                  <>
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    <span>Updating...</span>
-                  </>
-                ) : (
-                  <>
-                    <Save className="w-5 h-5" />
-                    <span>Update Customer</span>
-                  </>
-                )}
-              </button>
-
-              <button
-                onClick={() => setShowEditModal(false)}
-                disabled={updating}
-                className="px-6 py-3 rounded-xl font-semibold transition-all duration-300 hover:scale-[1.02] disabled:opacity-50"
-                style={{
-                  backgroundColor: `${COLORS.secondary}15`,
-                  border: `1px solid ${COLORS.secondary}30`,
-                  color: COLORS.secondary,
-                }}
-              >
-                Cancel
-              </button>
             </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
       {/* Delete Confirmation Modal */}
-      {showDeleteConfirm && selectedCustomer && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-          <div
-            className="bg-white rounded-2xl max-w-md w-full p-6"
-            style={{
-              backgroundColor: isDarkMode ? COLORS.dark : 'white',
-              border: `1px solid ${COLORS.danger}20`,
-            }}
-          >
-            <div className="flex items-center space-x-3 mb-4">
-              <div
-                className="p-3 rounded-xl"
-                style={{
-                  backgroundColor: `${COLORS.danger}15`,
-                  border: `1px solid ${COLORS.danger}30`,
-                }}
-              >
-                <AlertCircle className="w-6 h-6" style={{ color: COLORS.danger }} />
+      {
+        showDeleteConfirm && selectedCustomer && (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+            <div
+              className="bg-white rounded-2xl max-w-md w-full p-6"
+              style={{
+                backgroundColor: isDarkMode ? COLORS.dark : 'white',
+                border: `1px solid ${COLORS.danger}20`,
+              }}
+            >
+              <div className="flex items-center space-x-3 mb-4">
+                <div
+                  className="p-3 rounded-xl"
+                  style={{
+                    backgroundColor: `${COLORS.danger}15`,
+                    border: `1px solid ${COLORS.danger}30`,
+                  }}
+                >
+                  <AlertCircle className="w-6 h-6" style={{ color: COLORS.danger }} />
+                </div>
+                <h2 className="text-xl font-bold" style={{ color: isDarkMode ? '#e6eef8' : COLORS.dark }}>
+                  Confirm Deletion
+                </h2>
               </div>
-              <h2 className="text-xl font-bold" style={{ color: isDarkMode ? '#e6eef8' : COLORS.dark }}>
-                Confirm Deletion
-              </h2>
-            </div>
 
-            <p className="mb-6" style={{ color: isDarkMode ? '#b8c5d0' : COLORS.secondary }}>
-              Are you sure you want to delete <strong>{selectedCustomer.name}</strong>? This action cannot be undone. The customer will be removed from the dashboard, analytics, and all reports.
-            </p>
+              <p className="mb-6" style={{ color: isDarkMode ? '#b8c5d0' : COLORS.secondary }}>
+                Are you sure you want to delete <strong>{selectedCustomer.name}</strong>? This action cannot be undone. The customer will be removed from the dashboard, analytics, and all reports.
+              </p>
 
-            <div className="flex space-x-3">
-              <button
-                onClick={confirmDelete}
-                disabled={deleting}
-                className="flex-1 py-3 rounded-xl font-semibold transition-all duration-300 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
-                style={{
-                  backgroundColor: COLORS.danger,
-                  color: 'white',
-                }}
-              >
-                {deleting ? (
-                  <>
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    <span>Deleting...</span>
-                  </>
-                ) : (
-                  <>
-                    <Trash2 className="w-5 h-5" />
-                    <span>Delete Customer</span>
-                  </>
-                )}
-              </button>
+              <div className="flex space-x-3">
+                <button
+                  onClick={confirmDelete}
+                  disabled={deleting}
+                  className="flex-1 py-3 rounded-xl font-semibold transition-all duration-300 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                  style={{
+                    backgroundColor: COLORS.danger,
+                    color: 'white',
+                  }}
+                >
+                  {deleting ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <span>Deleting...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="w-5 h-5" />
+                      <span>Delete Customer</span>
+                    </>
+                  )}
+                </button>
 
-              <button
-                onClick={() => setShowDeleteConfirm(false)}
-                disabled={deleting}
-                className="flex-1 py-3 rounded-xl font-semibold transition-all duration-300 hover:scale-[1.02] disabled:opacity-50"
-                style={{
-                  backgroundColor: `${COLORS.secondary}15`,
-                  border: `1px solid ${COLORS.secondary}30`,
-                  color: COLORS.secondary,
-                }}
-              >
-                Cancel
-              </button>
+                <button
+                  onClick={() => setShowDeleteConfirm(false)}
+                  disabled={deleting}
+                  className="flex-1 py-3 rounded-xl font-semibold transition-all duration-300 hover:scale-[1.02] disabled:opacity-50"
+                  style={{
+                    backgroundColor: `${COLORS.secondary}15`,
+                    border: `1px solid ${COLORS.secondary}30`,
+                    color: COLORS.secondary,
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        )
+      }
+    </div >
   );
 }

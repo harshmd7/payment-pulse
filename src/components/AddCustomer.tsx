@@ -25,6 +25,7 @@ export default function AddCustomer({ onCustomerAdded, isDarkMode = false }: Add
     name: '',
     email: '',
     phone: '',
+    upi_id: '',
     outstanding_amount: '',
     days_overdue: '',
   });
@@ -68,6 +69,32 @@ export default function AddCustomer({ onCustomerAdded, isDarkMode = false }: Add
         throw new Error('Customer name is required');
       }
 
+      // Check for duplicate email
+      if (formData.email.trim()) {
+        const { data: existingEmail } = await supabase
+          .from('customers')
+          .select('id')
+          .eq('email', formData.email.trim())
+          .limit(1);
+
+        if (existingEmail && existingEmail.length > 0) {
+          throw new Error('A customer with this email already exists');
+        }
+      }
+
+      // Check for duplicate UPI ID
+      if (formData.upi_id.trim()) {
+        const { data: existingUPI } = await supabase
+          .from('customers')
+          .select('id')
+          .eq('upi_id', formData.upi_id.trim())
+          .limit(1);
+
+        if (existingUPI && existingUPI.length > 0) {
+          throw new Error('A customer with this UPI ID already exists');
+        }
+      }
+
       const outstanding = parseFloat(formData.outstanding_amount) || 0;
       const daysOverdue = parseInt(formData.days_overdue) || 0;
 
@@ -78,6 +105,7 @@ export default function AddCustomer({ onCustomerAdded, isDarkMode = false }: Add
         name: formData.name.trim(),
         email: formData.email.trim() || null,
         phone: formData.phone.trim() || null,
+        upi_id: formData.upi_id.trim() || null,
         outstanding_amount: outstanding,
         days_overdue: daysOverdue,
         risk_score: riskScore,
@@ -91,6 +119,7 @@ export default function AddCustomer({ onCustomerAdded, isDarkMode = false }: Add
         name: '',
         email: '',
         phone: '',
+        upi_id: '',
         outstanding_amount: '',
         days_overdue: '',
       });
@@ -110,6 +139,7 @@ export default function AddCustomer({ onCustomerAdded, isDarkMode = false }: Add
       name: '',
       email: '',
       phone: '',
+      upi_id: '',
       outstanding_amount: '',
       days_overdue: '',
     });
@@ -199,6 +229,28 @@ export default function AddCustomer({ onCustomerAdded, isDarkMode = false }: Add
                 }}
                 placeholder="+91 1234567890"
               />
+            </div>
+
+            {/* UPI ID */}
+            <div>
+              <label className="block text-sm font-semibold mb-2" style={{ color: isDarkMode ? '#e6eef8' : COLORS.dark }}>
+                UPI ID <span className="text-xs font-normal" style={{ color: COLORS.secondary }}>(Optional - for automatic payment tracking)</span>
+              </label>
+              <input
+                type="text"
+                name="upi_id"
+                value={formData.upi_id}
+                onChange={handleChange}
+                className="w-full px-4 py-3 rounded-xl border focus:outline-none focus:ring-2"
+                style={{
+                  borderColor: `${COLORS.primary}30`,
+                  backgroundColor: 'white',
+                }}
+                placeholder="customer@paytm or customer@ybl"
+              />
+              <p className="text-xs mt-1" style={{ color: COLORS.secondary }}>
+                Examples: username@paytm, username@ybl, username@oksbi
+              </p>
             </div>
 
             {/* Outstanding Amount */}

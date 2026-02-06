@@ -1,7 +1,8 @@
 import { useState, useRef } from 'react';
-import { Upload, FileText, X, AlertCircle, CheckCircle, Sparkles } from 'lucide-react';
+import { Upload, FileText, X, AlertCircle, CheckCircle, Sparkles, FileSpreadsheet, FileJson } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { calculateAdvancedRiskScore, getRiskCategory } from '../utils/riskScoreCalculator';
+import { parseFile, getFileTypeDescription } from '../utils/fileParser';
 
 // Royal Color Palette - High Contrast
 const COLORS = {
@@ -38,12 +39,16 @@ export default function FileUpload({ onUploadComplete, isDarkMode = false }: Fil
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
-      if (selectedFile.type === 'text/csv' || selectedFile.name.endsWith('.csv')) {
+      const fileName = selectedFile.name.toLowerCase();
+      const validExtensions = ['.csv', '.xlsx', '.xls', '.json'];
+      const isValid = validExtensions.some(ext => fileName.endsWith(ext));
+
+      if (isValid) {
         setFile(selectedFile);
         setError('');
         setSuccess('');
       } else {
-        setError('Please upload a CSV file');
+        setError('Please upload a CSV, Excel (XLSX/XLS), or JSON file');
         setFile(null);
       }
     }
@@ -59,64 +64,63 @@ export default function FileUpload({ onUploadComplete, isDarkMode = false }: Fil
     return riskScore;
   };
 
-  const handleCsvUpload = async () => {
+  const handleFileUpload = async () => {
     if (!file) return;
     setUploading(true);
     setError('');
     setSuccess('');
 
     try {
-      const text = await file.text();
-      const lines = text.split('\n').filter((line) => line.trim());
-      const headers = lines[0].split(',').map((h) => h.trim().toLowerCase());
+      // Use the universal file parser
+      const parsedTransactions = await parseFile(file);
 
-      const customers = [];
-      const user = (await supabase.auth.getUser()).data.user;
-
-      for (let i = 1; i < lines.length; i++) {
-        const values = lines[i].split(',');
-        if (values.length < headers.length) continue;
-
-        const customer: any = { user_id: user?.id };
-
-        headers.forEach((header, index) => {
-          const value = values[index]?.trim();
-          if (header.includes('name')) customer.name = value || 'Unknown';
-          if (header.includes('email')) customer.email = value || null;
-          if (header.includes('phone')) customer.phone = value || null;
-          if (header.includes('amount') || header.includes('outstanding'))
-            customer.outstanding_amount = parseFloat(value) || 0;
-          if (header.includes('overdue') || header.includes('days'))
-            customer.days_overdue = parseInt(value) || 0;
-        });
-
-        if (!customer.name) customer.name = `Customer ${i}`;
-
-        const riskScore = calculateRiskScore(customer.outstanding_amount || 0, customer.days_overdue || 0);
-        customer.risk_score = riskScore;
-        customer.status = getRiskCategory(riskScore).category;
-
-        customers.push(customer);
+      if (parsedTransactions.length === 0) {
+        throw new Error('No valid data found in file');
       }
 
+      const user = (await supabase.auth.getUser()).data.user;
+
+      // Process each transaction and calculate risk scores
+      const customers = parsedTransactions.map((transaction, index) => {
+        const riskScore = calculateRiskScore(
+          transaction.outstanding_amount || 0,
+          transaction.days_overdue || 0
+        );
+
+        return {
+          user_id: user?.id,
+          name: transaction.name || `Customer ${index + 1}`,
+          email: transaction.email || null,
+          phone: transaction.phone || null,
+          upi_id: transaction.upi_id || null,
+          outstanding_amount: transaction.outstanding_amount || 0,
+          days_overdue: transaction.days_overdue || 0,
+          risk_score: riskScore,
+          status: getRiskCategory(riskScore).category,
+        };
+      });
+
+      // Insert customers into database
       const { error: insertError } = await supabase.from('customers').insert(customers);
       if (insertError) throw insertError;
 
+      // Log the uploaded file
       const { error: fileError } = await supabase.from('uploaded_files').insert({
         user_id: user?.id,
         file_name: file.name,
-        file_type: file.type,
+        file_type: file.type || getFileTypeDescription(file),
         processing_status: 'completed',
         records_processed: customers.length,
       });
       if (fileError) throw fileError;
 
-      setSuccess(`Successfully processed ${customers.length} records from CSV.`);
+      const fileType = getFileTypeDescription(file);
+      setSuccess(`Successfully processed ${customers.length} records from ${fileType}.`);
       setFile(null);
       if (fileInputRef.current) fileInputRef.current.value = '';
       onUploadComplete();
     } catch (err: any) {
-      setError(err.message || 'Failed to upload CSV');
+      setError(err.message || 'Failed to upload file');
     } finally {
       setUploading(false);
     }
@@ -150,7 +154,7 @@ export default function FileUpload({ onUploadComplete, isDarkMode = false }: Fil
           <input
             ref={fileInputRef}
             type="file"
-            accept=".csv"
+            accept=".csv,.xlsx,.xls,.json"
             onChange={handleFileChange}
             className="hidden"
             id="file-upload"
@@ -169,7 +173,7 @@ export default function FileUpload({ onUploadComplete, isDarkMode = false }: Fil
               {file ? file.name : 'Click to upload or drag and drop'}
             </p>
             <p className="text-sm" style={{ color: isDarkMode ? '#b8c5d0' : COLORS.textBody }}>
-              CSV files only (Max 10MB)
+              CSV, Excel (XLSX/XLS), or JSON files (Max 10MB)
             </p>
           </label>
         </div>
@@ -211,7 +215,7 @@ export default function FileUpload({ onUploadComplete, isDarkMode = false }: Fil
 
         {/* Manual Upload Button */}
         <button
-          onClick={handleCsvUpload}
+          onClick={handleFileUpload}
           disabled={!file || uploading}
           className="w-full py-4 rounded-xl font-bold transition-all duration-300 hover:scale-[1.02] hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center space-x-2 text-white"
           style={{
@@ -222,7 +226,7 @@ export default function FileUpload({ onUploadComplete, isDarkMode = false }: Fil
           {uploading ? (
             <>
               <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              <span>Processing CSV...</span>
+              <span>Processing {file ? getFileTypeDescription(file) : 'File'}...</span>
             </>
           ) : (
             <>
@@ -241,13 +245,28 @@ export default function FileUpload({ onUploadComplete, isDarkMode = false }: Fil
         >
           <div className="flex items-center space-x-2 mb-4">
             <Sparkles className="w-5 h-5" style={{ color: COLORS.gold }} />
-            <h3 className="font-bold" style={{ color: isDarkMode ? '#e6eef8' : COLORS.textHeader }}>CSV Format Guidelines:</h3>
+            <h3 className="font-bold" style={{ color: isDarkMode ? '#e6eef8' : COLORS.textHeader }}>Supported File Formats:</h3>
           </div>
           <ul className="text-sm space-y-2 font-medium" style={{ color: isDarkMode ? '#b8c5d0' : COLORS.textBody }}>
-            <li>• Include headers: name, email, phone, outstanding_amount, days_overdue</li>
-            <li>• Each row represents one customer</li>
+            <li className="flex items-center space-x-2">
+              <FileText className="w-4 h-4" style={{ color: COLORS.primary }} />
+              <span><strong>CSV:</strong> Standard comma-separated values with headers</span>
+            </li>
+            <li className="flex items-center space-x-2">
+              <FileSpreadsheet className="w-4 h-4" style={{ color: COLORS.accent2 }} />
+              <span><strong>Excel (XLSX/XLS):</strong> GPay transaction exports, bank statements</span>
+            </li>
+            <li className="flex items-center space-x-2">
+              <FileJson className="w-4 h-4" style={{ color: COLORS.secondary }} />
+              <span><strong>JSON:</strong> Digital payment platform exports</span>
+            </li>
+            <li className="mt-3 pt-3 border-t" style={{ borderColor: `${COLORS.primary}20` }}>
+              • Required: Name, Amount, Days Overdue
+            </li>
+            <li>• Recommended: UPI ID (for automatic payment tracking)</li>
+            <li>• Optional: Email, Phone, Transaction Date</li>
             <li>• Amount should be numeric in INR</li>
-            <li>• Days overdue should be an integer</li>
+            <li>• The system will automatically detect and map your file columns</li>
           </ul>
         </div>
       </div>
