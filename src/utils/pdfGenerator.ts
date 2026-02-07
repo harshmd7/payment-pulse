@@ -1,63 +1,24 @@
 import { Customer } from '../lib/supabase';
+import { Transaction, generateUpcomingPayments, generateMockTransactions } from './transactionUtils';
 
-interface PaymentHistory {
-  date: string;
-  amount: number;
-  status: 'Paid' | 'Pending';
-}
+export async function generateCustomerPDF(customer: Customer, paymentHistory?: Transaction[], upcomingPayments?: { dueDate: string; amount: number }[]): Promise<void> {
+  // Use provided payment history (from UI) if available to ensure consistency,
+  // otherwise generate mock history.
+  const history = paymentHistory && paymentHistory.length > 0 ? paymentHistory : generateMockTransactions(customer);
 
-export async function generateCustomerPDF(customer: Customer): Promise<void> {
-  // Generate mock payment history (last 3 months)
-  const paymentHistory: PaymentHistory[] = generatePaymentHistory(customer);
-  
-  // Generate upcoming payments
-  const upcomingPayments = generateUpcomingPayments(customer);
+  // Use provided upcoming payments or generate defaults
+  const upcoming = upcomingPayments && upcomingPayments.length > 0 ? upcomingPayments : generateUpcomingPayments(customer);
 
-  // Create PDF using reportlab approach
-  const pdfContent = await createPDFDocument(customer, paymentHistory, upcomingPayments);
-  
+  // Create PDF
+  const pdfContent = await createPDFDocument(customer, history, upcoming);
+
   // Download the PDF
   downloadPDF(pdfContent, `${customer.name.replace(/\s+/g, '_')}_Report.pdf`);
 }
 
-function generatePaymentHistory(customer: Customer): PaymentHistory[] {
-  const history: PaymentHistory[] = [];
-  const today = new Date();
-  
-  for (let i = 0; i < 3; i++) {
-    const date = new Date(today);
-    date.setMonth(date.getMonth() - i);
-    
-    history.push({
-      date: date.toLocaleDateString('en-IN'),
-      amount: Math.floor(Math.random() * Number(customer.outstanding_amount) * 0.3),
-      status: i === 0 ? 'Pending' : 'Paid',
-    });
-  }
-  
-  return history;
-}
-
-function generateUpcomingPayments(customer: Customer): { dueDate: string; amount: number }[] {
-  const upcoming = [];
-  const today = new Date();
-  
-  for (let i = 1; i <= 2; i++) {
-    const dueDate = new Date(today);
-    dueDate.setDate(dueDate.getDate() + (i * 15));
-    
-    upcoming.push({
-      dueDate: dueDate.toLocaleDateString('en-IN'),
-      amount: Math.floor(Number(customer.outstanding_amount) * 0.3),
-    });
-  }
-  
-  return upcoming;
-}
-
 async function createPDFDocument(
   customer: Customer,
-  paymentHistory: PaymentHistory[],
+  paymentHistory: Transaction[],
   upcomingPayments: { dueDate: string; amount: number }[]
 ): Promise<Blob> {
   // Use modern browser PDF generation

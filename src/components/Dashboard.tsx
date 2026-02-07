@@ -92,6 +92,14 @@ export default function Dashboard() {
     successRate: 0,
   });
 
+  const [previousMonthStats, setPreviousMonthStats] = useState({
+    recoveryRate: 0,
+    avgPaymentDays: 0,
+    highRisk: 0,
+    totalOutstanding: 0,
+    avgRiskScore: 0,
+  });
+
   useEffect(() => {
     loadCustomers();
   }, []);
@@ -134,6 +142,15 @@ export default function Dashboard() {
     // Compute average payment days weighted by outstanding amount so larger debts influence the average
     const weightedDaysSum = customerData.reduce((sum, c) => sum + (Number(c.days_overdue || 0) * Number(c.outstanding_amount || 0)), 0);
     const avgPaymentDays = totalOutstanding > 0 ? Math.round(weightedDaysSum / totalOutstanding) : 0;
+
+    // Store current stats for previous month comparison (in production, fetch from database)
+    setPreviousMonthStats({
+      recoveryRate: Number(recoveryRate.toFixed(1)),
+      avgPaymentDays,
+      highRisk,
+      totalOutstanding,
+      avgRiskScore: Number(avgRiskScore.toFixed(1)),
+    });
 
     setStats(prev => ({
       ...prev,
@@ -882,8 +899,8 @@ export default function Dashboard() {
               icon={Users}
               color={COLORS.primary}
               trend="up"
-              trendValue="+12%"
-              subtitle="Active: 82%"
+              trendValue="0%"
+              subtitle="Active: 0%"
               gradient={`linear-gradient(135deg, ${COLORS.primary}15, ${COLORS.secondary}15)`}
               iconBg={`${COLORS.primary}20`}
             />
@@ -893,8 +910,8 @@ export default function Dashboard() {
               value={stats.highRisk}
               icon={AlertCircle}
               color={COLORS.danger}
-              trend="up"
-              trendValue="+3"
+              trend={stats.highRisk > previousMonthStats.highRisk ? 'up' : stats.highRisk < previousMonthStats.highRisk ? 'down' : 'neutral'}
+              trendValue={Math.abs(stats.highRisk - previousMonthStats.highRisk).toString()}
               subtitle="Requires attention"
               gradient={`linear-gradient(135deg, ${COLORS.danger}10, ${COLORS.warning}10)`}
               iconBg={`${COLORS.danger}20`}
@@ -905,8 +922,10 @@ export default function Dashboard() {
               value={`₹${(stats.totalOutstanding / 100000).toFixed(1)}L`}
               icon={TrendingUp}
               color={COLORS.secondary}
-              trend="down"
-              trendValue="-2.1%"
+              trend={stats.totalOutstanding < previousMonthStats.totalOutstanding ? 'down' : stats.totalOutstanding > previousMonthStats.totalOutstanding ? 'up' : 'neutral'}
+              trendValue={previousMonthStats.totalOutstanding > 0 
+                ? `${((stats.totalOutstanding - previousMonthStats.totalOutstanding) / previousMonthStats.totalOutstanding * 100).toFixed(1)}%`
+                : '0%'}
               subtitle="Across all customers"
               gradient={`linear-gradient(135deg, ${COLORS.primary}12, ${COLORS.secondary}12)`}
               iconBg={`${COLORS.secondary}20`}
@@ -917,8 +936,8 @@ export default function Dashboard() {
               value={stats.avgRiskScore.toFixed(1)}
               icon={TrendingUp}
               color={COLORS.success}
-              trend="down"
-              trendValue="-1.5"
+              trend={stats.avgRiskScore < previousMonthStats.avgRiskScore ? 'down' : stats.avgRiskScore > previousMonthStats.avgRiskScore ? 'up' : 'neutral'}
+              trendValue={(stats.avgRiskScore - previousMonthStats.avgRiskScore).toFixed(1)}
               subtitle="Overall improvement"
               gradient={`linear-gradient(135deg, ${COLORS.success}10, ${COLORS.accent1}15)`}
               iconBg={`${COLORS.success}20`}
@@ -955,7 +974,10 @@ export default function Dashboard() {
                   <span className="text-sm font-semibold" style={{ color: THEME.text }}>Recovery Rate</span>
                 </div>
                 <p className="text-2xl font-bold mb-1" style={{ color: THEME.text }}>{stats.recoveryRate}%</p>
-                <p className="text-sm" style={{ color: THEME.muted }}>+2.3% from last month</p>
+                <p className="text-sm" style={{ color: THEME.muted }}>
+                  {stats.recoveryRate >= previousMonthStats.recoveryRate ? '+' : ''}
+                  {(stats.recoveryRate - previousMonthStats.recoveryRate).toFixed(1)}% from last month
+                </p>
               </div>
 
               <div className="p-4 rounded-xl" style={{ backgroundColor: THEME.cardBg }}>
@@ -966,7 +988,11 @@ export default function Dashboard() {
                   <span className="text-sm font-semibold" style={{ color: THEME.text }}>Avg Payment Days</span>
                 </div>
                 <p className="text-2xl font-bold mb-1" style={{ color: THEME.text }}>{stats.avgPaymentDays}</p>
-                <p className="text-sm" style={{ color: THEME.muted }}>-3 days improvement</p>
+                <p className="text-sm" style={{ color: THEME.muted }}>
+                  {previousMonthStats.avgPaymentDays > stats.avgPaymentDays ? '-' : '+'}
+                  {Math.abs(previousMonthStats.avgPaymentDays - stats.avgPaymentDays)} days
+                  {previousMonthStats.avgPaymentDays > stats.avgPaymentDays ? ' improvement' : ' increase'}
+                </p>
               </div>
             </div>
           </div>
