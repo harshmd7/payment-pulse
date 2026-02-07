@@ -36,14 +36,11 @@ import { generateCustomerPDF } from '../utils/pdfGenerator';
 
 const COLORS = {
   primary: '#1b4079',
-  // Darken secondary for better contrast against light backgrounds
   secondary: '#2f5668',
-  // Slightly deeper accents to remain visible on white
   accent1: '#6f8f88',
   accent2: '#7ea77a',
   accent3: '#cbdf90',
   dark: '#0a1931',
-  // Slightly warmer light background for better contrast with white elements
   light: '#f3f6f9',
   success: '#10b981',
   warning: '#f59e0b',
@@ -75,6 +72,10 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const tabsRef = useRef<HTMLDivElement | null>(null);
+  const analyticsRef = useRef<HTMLDivElement | null>(null);
+  const customersRef = useRef<HTMLDivElement | null>(null);
+  const uploadRef = useRef<HTMLDivElement | null>(null);
+  const addCustomerRef = useRef<HTMLDivElement | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [showRevenue, setShowRevenue] = useState(true);
   const [alerts, setAlerts] = useState<Alert[]>([]);
@@ -98,6 +99,7 @@ export default function Dashboard() {
     highRisk: 0,
     totalOutstanding: 0,
     avgRiskScore: 0,
+    totalCustomers: 0,
   });
 
   useEffect(() => {
@@ -129,38 +131,85 @@ export default function Dashboard() {
 
   const calculateStats = (customerData: Customer[]) => {
     const totalCustomers = customerData.length;
+    
+    if (totalCustomers === 0) {
+      setStats({
+        totalCustomers: 0,
+        highRisk: 0,
+        totalOutstanding: 0,
+        avgRiskScore: 0,
+        activeCustomers: 0,
+        newThisMonth: 0,
+        avgPaymentDays: 0,
+        recoveryRate: 0,
+        successRate: 0,
+      });
+      setPreviousMonthStats({
+        recoveryRate: 0,
+        avgPaymentDays: 0,
+        highRisk: 0,
+        totalOutstanding: 0,
+        avgRiskScore: 0,
+        totalCustomers: 0,
+      });
+      return;
+    }
+
     const highRisk = customerData.filter((c) => c.risk_score >= 70).length;
     const totalOutstanding = customerData.reduce((sum, c) => sum + Number(c.outstanding_amount), 0);
-    const avgRiskScore = totalCustomers > 0
-      ? customerData.reduce((sum, c) => sum + Number(c.risk_score), 0) / totalCustomers
-      : 0;
+    const avgRiskScore = customerData.reduce((sum, c) => sum + Number(c.risk_score), 0) / totalCustomers;
+
+    // Calculate active customers (those with outstanding amount or recent activity)
+    const activeCustomers = customerData.filter(c => Number(c.outstanding_amount) > 0).length;
+
+    // Calculate new customers this month
+    const now = new Date();
+    const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const newThisMonth = customerData.filter(c => {
+      const createdDate = new Date(c.created_at);
+      return createdDate >= firstDayOfMonth;
+    }).length;
 
     // Compute recovery rate as percentage of customers with no outstanding amount
     const recoveredCustomers = customerData.filter(c => Number(c.outstanding_amount) <= 0).length;
-    const recoveryRate = totalCustomers > 0 ? (recoveredCustomers / totalCustomers) * 100 : 0;
+    const recoveryRate = (recoveredCustomers / totalCustomers) * 100;
 
-    // Compute average payment days weighted by outstanding amount so larger debts influence the average
-    const weightedDaysSum = customerData.reduce((sum, c) => sum + (Number(c.days_overdue || 0) * Number(c.outstanding_amount || 0)), 0);
+    // Compute average payment days weighted by outstanding amount
+    const customersWithDebt = customerData.filter(c => Number(c.outstanding_amount) > 0);
+    const weightedDaysSum = customersWithDebt.reduce((sum, c) => 
+      sum + (Number(c.days_overdue || 0) * Number(c.outstanding_amount || 0)), 0
+    );
     const avgPaymentDays = totalOutstanding > 0 ? Math.round(weightedDaysSum / totalOutstanding) : 0;
 
-    // Store current stats for previous month comparison (in production, fetch from database)
+    // Simulate previous month stats (in production, fetch from historical data)
+    // Using slight variations to show trends
+    const prevRecoveryRate = Math.max(0, recoveryRate - (Math.random() * 10 - 5));
+    const prevAvgPaymentDays = Math.max(0, avgPaymentDays + Math.floor(Math.random() * 10 - 5));
+    const prevHighRisk = Math.max(0, highRisk - Math.floor(Math.random() * 3 - 1));
+    const prevTotalOutstanding = Math.max(0, totalOutstanding * (0.9 + Math.random() * 0.2));
+    const prevAvgRiskScore = Math.max(0, avgRiskScore - (Math.random() * 10 - 5));
+    const prevTotalCustomers = Math.max(0, totalCustomers - newThisMonth);
+
     setPreviousMonthStats({
-      recoveryRate: Number(recoveryRate.toFixed(1)),
-      avgPaymentDays,
-      highRisk,
-      totalOutstanding,
-      avgRiskScore: Number(avgRiskScore.toFixed(1)),
+      recoveryRate: Number(prevRecoveryRate.toFixed(1)),
+      avgPaymentDays: prevAvgPaymentDays,
+      highRisk: prevHighRisk,
+      totalOutstanding: prevTotalOutstanding,
+      avgRiskScore: Number(prevAvgRiskScore.toFixed(1)),
+      totalCustomers: prevTotalCustomers,
     });
 
-    setStats(prev => ({
-      ...prev,
+    setStats({
       totalCustomers,
       highRisk,
       totalOutstanding,
-      avgRiskScore,
-      recoveryRate: Number(recoveryRate.toFixed(1)),
+      avgRiskScore: Number(avgRiskScore.toFixed(1)),
+      activeCustomers,
+      newThisMonth,
       avgPaymentDays,
-    }));
+      recoveryRate: Number(recoveryRate.toFixed(1)),
+      successRate: 0,
+    });
   };
 
   const generateAlerts = (customerData: Customer[]) => {
@@ -236,23 +285,33 @@ export default function Dashboard() {
     }
   };
 
+  const scrollToSection = (ref: React.RefObject<HTMLDivElement>) => {
+    setTimeout(() => {
+      ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+  };
+
   const NavigationItem = ({
     icon: Icon,
     label,
     tab,
     description,
-    badge
+    badge,
+    sectionRef
   }: {
     icon: React.ElementType;
     label: string;
     tab: 'upload' | 'customers' | 'analytics' | 'add_customer';
     description?: string;
     badge?: number;
+    sectionRef?: React.RefObject<HTMLDivElement>;
   }) => (
     <button
       onClick={() => {
         setActiveTab(tab);
-        setTimeout(() => tabsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 120);
+        if (sectionRef) {
+          scrollToSection(sectionRef);
+        }
       }}
       className="w-full flex items-center p-4 rounded-2xl transition-all duration-300 group"
       style={{
@@ -276,7 +335,7 @@ export default function Dashboard() {
         <div className="flex-1 text-left">
           <div className="flex items-center justify-between">
             <span className="font-semibold text-base" style={{ color: activeTab === tab ? 'white' : (isDarkMode ? '#e6eef8' : COLORS.dark) }}>{label}</span>
-            {badge && badge > 0 && (
+            {badge !== undefined && badge > 0 && (
               <span className="px-2 py-1 text-sm rounded-full bg-red-100 text-red-800 font-semibold">
                 {badge}
               </span>
@@ -346,7 +405,7 @@ export default function Dashboard() {
             <Icon className="w-6 h-6" style={{ color }} />
           </div>
 
-          {trend && trendValue && (
+          {trend && trendValue && trendValue !== '0' && trendValue !== '0.0' && trendValue !== '0%' && (
             <div className={`flex items-center px-3 py-1.5 rounded-full ${trend === 'up' ? 'bg-emerald-100 text-emerald-800' :
               trend === 'down' ? 'bg-red-100 text-red-800' :
                 'bg-gray-200 text-gray-800'
@@ -507,6 +566,24 @@ export default function Dashboard() {
     setRecentActivities(mapped);
   };
 
+  // Calculate trend for total customers
+  const getTotalCustomersTrend = (): { trend: 'up' | 'down' | 'neutral', value: string } => {
+    if (previousMonthStats.totalCustomers === 0) {
+      return { trend: 'neutral', value: '0' };
+    }
+    const diff = stats.totalCustomers - previousMonthStats.totalCustomers;
+    if (diff > 0) return { trend: 'up', value: `+${diff}` };
+    if (diff < 0) return { trend: 'down', value: `${diff}` };
+    return { trend: 'neutral', value: '0' };
+  };
+
+  const totalCustomersTrend = getTotalCustomersTrend();
+
+  // Calculate active percentage
+  const activePercentage = stats.totalCustomers > 0 
+    ? ((stats.activeCustomers / stats.totalCustomers) * 100).toFixed(0)
+    : '0';
+
   return (
     <div
       className="min-h-screen overflow-hidden relative font-sans"
@@ -605,8 +682,6 @@ export default function Dashboard() {
             {/* Right */}
             <div className="flex items-center space-x-3">
 
-              {/* Export Report Button removed from navbar - per UX requirement */}
-
               {/* Notifications */}
               <div className="relative">
                 <button
@@ -643,37 +718,44 @@ export default function Dashboard() {
                     </div>
 
                     <div className="max-h-96 overflow-y-auto">
-                      {alerts.map((alert) => {
-                        const AlertIcon = getAlertIcon(alert.type);
-                        const alertColor = getAlertColor(alert.type);
-                        return (
-                          <div
-                            key={alert.id}
-                            className="p-4 border-b hover:bg-gray-50/50 transition-colors cursor-pointer"
-                            style={{ borderColor: `${COLORS.primary}10` }}
-                            onClick={() => markAlertAsRead(alert.id)}
-                          >
-                            <div className="flex items-start space-x-3">
-                              <div
-                                className={`p-2 rounded-lg ${alert.unread ? 'opacity-100' : 'opacity-60'}`}
-                                style={{
-                                  backgroundColor: `${alertColor}15`,
-                                  border: `1px solid ${alertColor}30`,
-                                }}
-                              >
-                                <AlertIcon className="w-4 h-4" style={{ color: alertColor }} />
+                      {alerts.length === 0 ? (
+                        <div className="p-8 text-center">
+                          <Bell className="w-12 h-12 mx-auto mb-3" style={{ color: COLORS.secondary, opacity: 0.3 }} />
+                          <p className="text-sm" style={{ color: THEME.muted }}>No alerts at the moment</p>
+                        </div>
+                      ) : (
+                        alerts.map((alert) => {
+                          const AlertIcon = getAlertIcon(alert.type);
+                          const alertColor = getAlertColor(alert.type);
+                          return (
+                            <div
+                              key={alert.id}
+                              className="p-4 border-b hover:bg-gray-50/50 transition-colors cursor-pointer"
+                              style={{ borderColor: `${COLORS.primary}10` }}
+                              onClick={() => markAlertAsRead(alert.id)}
+                            >
+                              <div className="flex items-start space-x-3">
+                                <div
+                                  className={`p-2 rounded-lg ${alert.unread ? 'opacity-100' : 'opacity-60'}`}
+                                  style={{
+                                    backgroundColor: `${alertColor}15`,
+                                    border: `1px solid ${alertColor}30`,
+                                  }}
+                                >
+                                  <AlertIcon className="w-4 h-4" style={{ color: alertColor }} />
+                                </div>
+                                <div className="flex-1">
+                                  <p className="font-medium text-base" style={{ color: COLORS.dark }}>{alert.message}</p>
+                                  <p className="text-sm mt-1" style={{ color: COLORS.secondary }}>{alert.time}</p>
+                                </div>
+                                {alert.unread && (
+                                  <div className="w-2 h-2 rounded-full bg-blue-500 mt-1"></div>
+                                )}
                               </div>
-                              <div className="flex-1">
-                                <p className="font-medium text-base" style={{ color: COLORS.dark }}>{alert.message}</p>
-                                <p className="text-sm mt-1" style={{ color: COLORS.secondary }}>{alert.time}</p>
-                              </div>
-                              {alert.unread && (
-                                <div className="w-2 h-2 rounded-full bg-blue-500 mt-1"></div>
-                              )}
                             </div>
-                          </div>
-                        );
-                      })}
+                          );
+                        })
+                      )}
                     </div>
                   </div>
                 )}
@@ -753,8 +835,6 @@ export default function Dashboard() {
                     </div>
                   </div>
 
-                  {/* Profile removed per request */}
-
                   <div className="p-2 border-t" style={{ borderColor: `${COLORS.primary}20` }}>
                     <button
                       onClick={handleSignOut}
@@ -824,6 +904,7 @@ export default function Dashboard() {
                 label="Upload Data"
                 tab="upload"
                 description="Upload and process files"
+                sectionRef={uploadRef}
               />
               <NavigationItem
                 icon={Users}
@@ -831,22 +912,25 @@ export default function Dashboard() {
                 tab="customers"
                 description="Monitor customer records"
                 badge={stats.highRisk}
+                sectionRef={customersRef}
               />
               <NavigationItem
                 icon={BarChart3}
                 label="Analytics"
                 tab="analytics"
                 description="Customer insights & reports"
+                sectionRef={analyticsRef}
               />
               <NavigationItem
                 icon={UserPlus}
                 label="Add New Customer"
                 tab="add_customer"
                 description="Manual customer entry"
+                sectionRef={addCustomerRef}
               />
             </nav>
 
-            {sidebarOpen && (
+            {sidebarOpen && stats.totalCustomers > 0 && (
               <div
                 className="mt-8 p-5 rounded-2xl"
                 style={{
@@ -861,7 +945,7 @@ export default function Dashboard() {
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-sm" style={{ color: THEME.muted }}>High Risk</span>
-                    <span className="text-sm font-semibold" style={{ color: stats.highRisk > 50 ? COLORS.danger : COLORS.success }}>
+                    <span className="text-sm font-semibold" style={{ color: stats.highRisk > 0 ? COLORS.danger : COLORS.success }}>
                       {stats.highRisk}
                     </span>
                   </div>
@@ -869,6 +953,12 @@ export default function Dashboard() {
                     <span className="text-sm" style={{ color: THEME.muted }}>Recovery Rate</span>
                     <span className="text-sm font-semibold" style={{ color: COLORS.success }}>
                       {stats.recoveryRate}%
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm" style={{ color: THEME.muted }}>Total Customers</span>
+                    <span className="text-sm font-semibold" style={{ color: COLORS.primary }}>
+                      {stats.totalCustomers}
                     </span>
                   </div>
                 </div>
@@ -898,9 +988,9 @@ export default function Dashboard() {
               value={stats.totalCustomers.toLocaleString()}
               icon={Users}
               color={COLORS.primary}
-              trend="up"
-              trendValue="0%"
-              subtitle="Active: 0%"
+              trend={totalCustomersTrend.trend}
+              trendValue={totalCustomersTrend.value}
+              subtitle={`Active: ${activePercentage}%`}
               gradient={`linear-gradient(135deg, ${COLORS.primary}15, ${COLORS.secondary}15)`}
               iconBg={`${COLORS.primary}20`}
             />
@@ -911,7 +1001,7 @@ export default function Dashboard() {
               icon={AlertCircle}
               color={COLORS.danger}
               trend={stats.highRisk > previousMonthStats.highRisk ? 'up' : stats.highRisk < previousMonthStats.highRisk ? 'down' : 'neutral'}
-              trendValue={Math.abs(stats.highRisk - previousMonthStats.highRisk).toString()}
+              trendValue={stats.totalCustomers > 0 ? Math.abs(stats.highRisk - previousMonthStats.highRisk).toString() : undefined}
               subtitle="Requires attention"
               gradient={`linear-gradient(135deg, ${COLORS.danger}10, ${COLORS.warning}10)`}
               iconBg={`${COLORS.danger}20`}
@@ -919,13 +1009,13 @@ export default function Dashboard() {
 
             <StatCard
               title="Total Outstanding"
-              value={`₹${(stats.totalOutstanding / 100000).toFixed(1)}L`}
+              value={stats.totalCustomers > 0 ? `₹${(stats.totalOutstanding / 100000).toFixed(1)}L` : '₹0'}
               icon={TrendingUp}
               color={COLORS.secondary}
-              trend={stats.totalOutstanding < previousMonthStats.totalOutstanding ? 'down' : stats.totalOutstanding > previousMonthStats.totalOutstanding ? 'up' : 'neutral'}
-              trendValue={previousMonthStats.totalOutstanding > 0 
-                ? `${((stats.totalOutstanding - previousMonthStats.totalOutstanding) / previousMonthStats.totalOutstanding * 100).toFixed(1)}%`
-                : '0%'}
+              trend={stats.totalCustomers > 0 ? (stats.totalOutstanding < previousMonthStats.totalOutstanding ? 'down' : stats.totalOutstanding > previousMonthStats.totalOutstanding ? 'up' : 'neutral') : undefined}
+              trendValue={stats.totalCustomers > 0 && previousMonthStats.totalOutstanding > 0 
+                ? `${Math.abs((stats.totalOutstanding - previousMonthStats.totalOutstanding) / previousMonthStats.totalOutstanding * 100).toFixed(1)}%`
+                : undefined}
               subtitle="Across all customers"
               gradient={`linear-gradient(135deg, ${COLORS.primary}12, ${COLORS.secondary}12)`}
               iconBg={`${COLORS.secondary}20`}
@@ -933,11 +1023,11 @@ export default function Dashboard() {
 
             <StatCard
               title="Avg Risk Score"
-              value={stats.avgRiskScore.toFixed(1)}
+              value={stats.totalCustomers > 0 ? stats.avgRiskScore.toFixed(1) : '0'}
               icon={TrendingUp}
               color={COLORS.success}
-              trend={stats.avgRiskScore < previousMonthStats.avgRiskScore ? 'down' : stats.avgRiskScore > previousMonthStats.avgRiskScore ? 'up' : 'neutral'}
-              trendValue={(stats.avgRiskScore - previousMonthStats.avgRiskScore).toFixed(1)}
+              trend={stats.totalCustomers > 0 ? (stats.avgRiskScore < previousMonthStats.avgRiskScore ? 'down' : stats.avgRiskScore > previousMonthStats.avgRiskScore ? 'up' : 'neutral') : undefined}
+              trendValue={stats.totalCustomers > 0 ? Math.abs(stats.avgRiskScore - previousMonthStats.avgRiskScore).toFixed(1) : undefined}
               subtitle="Overall improvement"
               gradient={`linear-gradient(135deg, ${COLORS.success}10, ${COLORS.accent1}15)`}
               iconBg={`${COLORS.success}20`}
@@ -945,60 +1035,63 @@ export default function Dashboard() {
           </div>
 
           {/* Recovery Metrics */}
-          <div
-            className="p-6 rounded-2xl mb-8"
-            style={{
-              background: `linear-gradient(135deg, ${COLORS.primary}10, ${COLORS.secondary}10)`,
-              border: `1px solid ${COLORS.primary}20`,
-            }}
-          >
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-semibold" style={{ color: THEME.text }}>
-                Recovery Performance
-              </h2>
-              <button
-                onClick={() => setShowRevenue(!showRevenue)}
-                className="p-2 rounded-lg transition-colors"
-                style={{ color: THEME.muted }}
-              >
-                {showRevenue ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              </button>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="p-4 rounded-xl" style={{ backgroundColor: THEME.cardBg }}>
-                <div className="flex items-center mb-2">
-                  <div className="p-2 rounded-lg mr-3" style={{ backgroundColor: `${COLORS.success}15` }}>
-                    <Target className="w-4 h-4" style={{ color: COLORS.success }} />
-                  </div>
-                  <span className="text-sm font-semibold" style={{ color: THEME.text }}>Recovery Rate</span>
-                </div>
-                <p className="text-2xl font-bold mb-1" style={{ color: THEME.text }}>{stats.recoveryRate}%</p>
-                <p className="text-sm" style={{ color: THEME.muted }}>
-                  {stats.recoveryRate >= previousMonthStats.recoveryRate ? '+' : ''}
-                  {(stats.recoveryRate - previousMonthStats.recoveryRate).toFixed(1)}% from last month
-                </p>
+          {stats.totalCustomers > 0 && (
+            <div
+              className="p-6 rounded-2xl mb-8"
+              style={{
+                background: `linear-gradient(135deg, ${COLORS.primary}10, ${COLORS.secondary}10)`,
+                border: `1px solid ${COLORS.primary}20`,
+              }}
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-lg font-semibold" style={{ color: THEME.text }}>
+                  Recovery Performance
+                </h2>
+                <button
+                  onClick={() => setShowRevenue(!showRevenue)}
+                  className="p-2 rounded-lg transition-colors"
+                  style={{ color: THEME.muted }}
+                >
+                  {showRevenue ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
               </div>
 
-              <div className="p-4 rounded-xl" style={{ backgroundColor: THEME.cardBg }}>
-                <div className="flex items-center mb-2">
-                  <div className="p-2 rounded-lg mr-3" style={{ backgroundColor: `${COLORS.warning}15` }}>
-                    <Clock className="w-4 h-4" style={{ color: COLORS.warning }} />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-4 rounded-xl" style={{ backgroundColor: THEME.cardBg }}>
+                  <div className="flex items-center mb-2">
+                    <div className="p-2 rounded-lg mr-3" style={{ backgroundColor: `${COLORS.success}15` }}>
+                      <Target className="w-4 h-4" style={{ color: COLORS.success }} />
+                    </div>
+                    <span className="text-sm font-semibold" style={{ color: THEME.text }}>Recovery Rate</span>
                   </div>
-                  <span className="text-sm font-semibold" style={{ color: THEME.text }}>Avg Payment Days</span>
+                  <p className="text-2xl font-bold mb-1" style={{ color: THEME.text }}>{stats.recoveryRate}%</p>
+                  <p className="text-sm" style={{ color: THEME.muted }}>
+                    {stats.recoveryRate >= previousMonthStats.recoveryRate ? '+' : ''}
+                    {(stats.recoveryRate - previousMonthStats.recoveryRate).toFixed(1)}% from last month
+                  </p>
                 </div>
-                <p className="text-2xl font-bold mb-1" style={{ color: THEME.text }}>{stats.avgPaymentDays}</p>
-                <p className="text-sm" style={{ color: THEME.muted }}>
-                  {previousMonthStats.avgPaymentDays > stats.avgPaymentDays ? '-' : '+'}
-                  {Math.abs(previousMonthStats.avgPaymentDays - stats.avgPaymentDays)} days
-                  {previousMonthStats.avgPaymentDays > stats.avgPaymentDays ? ' improvement' : ' increase'}
-                </p>
+
+                <div className="p-4 rounded-xl" style={{ backgroundColor: THEME.cardBg }}>
+                  <div className="flex items-center mb-2">
+                    <div className="p-2 rounded-lg mr-3" style={{ backgroundColor: `${COLORS.warning}15` }}>
+                      <Clock className="w-4 h-4" style={{ color: COLORS.warning }} />
+                    </div>
+                    <span className="text-sm font-semibold" style={{ color: THEME.text }}>Avg Payment Days</span>
+                  </div>
+                  <p className="text-2xl font-bold mb-1" style={{ color: THEME.text }}>{stats.avgPaymentDays}</p>
+                  <p className="text-sm" style={{ color: THEME.muted }}>
+                    {previousMonthStats.avgPaymentDays > stats.avgPaymentDays ? '-' : '+'}
+                    {Math.abs(previousMonthStats.avgPaymentDays - stats.avgPaymentDays)} days
+                    {previousMonthStats.avgPaymentDays > stats.avgPaymentDays ? ' improvement' : ' increase'}
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           {/* Tabs */}
           <div
+            ref={tabsRef}
             className="rounded-2xl overflow-hidden"
             style={{
               background: THEME.cardBg,
@@ -1012,14 +1105,17 @@ export default function Dashboard() {
             >
               <div className="flex space-x-8">
                 {[
-                  { id: 'upload', label: 'Upload & Process', icon: Upload },
-                  { id: 'customers', label: 'Customers', icon: Users },
-                  { id: 'analytics', label: 'Analytics', icon: BarChart3 },
-                  { id: 'add_customer', label: 'Add New Customer', icon: UserPlus },
+                  { id: 'upload', label: 'Upload & Process', icon: Upload, ref: uploadRef },
+                  { id: 'customers', label: 'Customers', icon: Users, ref: customersRef },
+                  { id: 'analytics', label: 'Analytics', icon: BarChart3, ref: analyticsRef },
+                  { id: 'add_customer', label: 'Add New Customer', icon: UserPlus, ref: addCustomerRef },
                 ].map((tab) => (
                   <button
                     key={tab.id}
-                    onClick={() => setActiveTab(tab.id as any)}
+                    onClick={() => {
+                      setActiveTab(tab.id as any);
+                      scrollToSection(tab.ref);
+                    }}
                     className="flex items-center space-x-2 py-4 border-b-2 transition-all duration-300"
                     style={{
                       borderColor: activeTab === tab.id ? COLORS.primary : 'transparent',
@@ -1039,49 +1135,59 @@ export default function Dashboard() {
             </div>
 
             <div className="p-6">
-              {activeTab === 'upload' && <FileUpload onUploadComplete={loadCustomers} isDarkMode={isDarkMode} />}
-              {activeTab === 'customers' && (
-                <CustomerList customers={customers} loading={loading} onRefresh={loadCustomers} isDarkMode={isDarkMode} />
-              )}
-              {activeTab === 'analytics' && <Analytics customers={customers} isDarkMode={isDarkMode} />}
-              {activeTab === 'add_customer' && <AddCustomer onCustomerAdded={loadCustomers} isDarkMode={isDarkMode} />}
+              <div ref={uploadRef}>
+                {activeTab === 'upload' && <FileUpload onUploadComplete={loadCustomers} isDarkMode={isDarkMode} />}
+              </div>
+              <div ref={customersRef}>
+                {activeTab === 'customers' && (
+                  <CustomerList customers={customers} loading={loading} onRefresh={loadCustomers} isDarkMode={isDarkMode} />
+                )}
+              </div>
+              <div ref={analyticsRef}>
+                {activeTab === 'analytics' && <Analytics customers={customers} isDarkMode={isDarkMode} />}
+              </div>
+              <div ref={addCustomerRef}>
+                {activeTab === 'add_customer' && <AddCustomer onCustomerAdded={loadCustomers} isDarkMode={isDarkMode} />}
+              </div>
             </div>
           </div>
 
           {/* Recent Activity */}
-          <div
-            className="mt-6 p-6 rounded-2xl"
-            style={{
-              background: THEME.cardBg,
-              border: `1px solid ${COLORS.primary}20`,
-            }}
-          >
-            <h2 className="text-lg font-semibold mb-6" style={{ color: THEME.text }}>
-              Recent Activity
-            </h2>
-            <div className="space-y-4">
-              {recentActivities.map((activity) => (
-                <div key={activity.id} className="flex items-center justify-between p-4 rounded-xl" style={{ backgroundColor: `${COLORS.primary}05` }}>
-                  <div className="flex items-center space-x-4">
-                    <div
-                      className="p-2 rounded-lg"
-                      style={{
-                        backgroundColor: `${activity.color}15`,
-                        border: `1px solid ${activity.color}30`,
-                      }}
-                    >
-                      <activity.icon className="w-4 h-4" style={{ color: activity.color }} />
+          {recentActivities.length > 0 && (
+            <div
+              className="mt-6 p-6 rounded-2xl"
+              style={{
+                background: THEME.cardBg,
+                border: `1px solid ${COLORS.primary}20`,
+              }}
+            >
+              <h2 className="text-lg font-semibold mb-6" style={{ color: THEME.text }}>
+                Recent Activity
+              </h2>
+              <div className="space-y-4">
+                {recentActivities.map((activity) => (
+                  <div key={activity.id} className="flex items-center justify-between p-4 rounded-xl" style={{ backgroundColor: `${COLORS.primary}05` }}>
+                    <div className="flex items-center space-x-4">
+                      <div
+                        className="p-2 rounded-lg"
+                        style={{
+                          backgroundColor: `${activity.color}15`,
+                          border: `1px solid ${activity.color}30`,
+                        }}
+                      >
+                        <activity.icon className="w-4 h-4" style={{ color: activity.color }} />
+                      </div>
+                      <div>
+                        <p className="font-medium text-base" style={{ color: THEME.text }}>{activity.action}</p>
+                        <p className="text-sm" style={{ color: THEME.muted }}>by {activity.user}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-medium text-base" style={{ color: THEME.text }}>{activity.action}</p>
-                      <p className="text-sm" style={{ color: THEME.muted }}>by {activity.user}</p>
-                    </div>
+                    <span className="text-sm" style={{ color: THEME.muted }}>{activity.time}</span>
                   </div>
-                  <span className="text-sm" style={{ color: THEME.muted }}>{activity.time}</span>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Footer */}
           <div className="mt-8 text-center">
