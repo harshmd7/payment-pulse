@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import CustomerAnalysis from './CustomerAnalysis';
 import { generateCustomerPDF } from '../utils/pdfGenerator';
+import { generateMockTransactions, Transaction } from '../utils/transactionUtils';
 import { getRiskCategory, calculateAdvancedRiskScore } from '../utils/riskScoreCalculator';
 
 const COLORS = {
@@ -34,12 +35,6 @@ const COLORS = {
   danger: '#ef4444',
 };
 
-interface Transaction {
-  date: string;
-  amount: number;
-  status: 'Paid' | 'Pending';
-}
-
 interface CustomerListProps {
   customers: Customer[];
   loading: boolean;
@@ -51,6 +46,7 @@ export default function CustomerList({ customers, loading, onRefresh, isDarkMode
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [transactionsCache, setTransactionsCache] = useState<Record<string, Transaction[]>>({});
   const [showAnalysis, setShowAnalysis] = useState(false);
   const [showTransactions, setShowTransactions] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -159,11 +155,18 @@ export default function CustomerList({ customers, loading, onRefresh, isDarkMode
   };
 
   const handleViewTransactions = (customer: Customer) => {
-    setSelectedCustomer(customer);
-    setShowTransactions(true);
-    setShowAnalysis(false);
-    setShowEditModal(false);
-  };
+  let tx = transactionsCache[customer.id];
+
+  if (!tx) {
+    tx = generateMockTransactions(customer);
+    setTransactionsCache(prev => ({ ...prev, [customer.id]: tx }));
+  }
+
+  setSelectedCustomer(customer);
+  setShowTransactions(true);
+  setShowAnalysis(false);
+  setShowEditModal(false);
+};
 
   const handleEditCustomer = (customer: Customer) => {
     setSelectedCustomer(customer);
@@ -237,23 +240,7 @@ export default function CustomerList({ customers, loading, onRefresh, isDarkMode
     }
   };
 
-  const generateMockTransactions = (customer: Customer): Transaction[] => {
-    const transactions: Transaction[] = [];
-    const today = new Date();
-
-    for (let i = 0; i < 3; i++) {
-      const date = new Date(today);
-      date.setMonth(date.getMonth() - i);
-
-      transactions.push({
-        date: date.toLocaleDateString('en-IN'),
-        amount: Math.floor(Math.random() * Number(customer.outstanding_amount) * 0.4),
-        status: i === 0 ? 'Pending' : 'Paid',
-      });
-    }
-
-    return transactions;
-  };
+  // use shared generator from utils to keep UI and PDF consistent
 
   if (loading) {
     return (
@@ -488,7 +475,17 @@ export default function CustomerList({ customers, loading, onRefresh, isDarkMode
                         </button>
 
                         <button
-                          onClick={() => generateCustomerPDF(customer)}
+                          onClick={() => {
+                           let tx = transactionsCache[customer.id];
+
+if (!tx) {
+  tx = generateMockTransactions(customer);
+  setTransactionsCache(prev => ({ ...prev, [customer.id]: tx }));
+}
+
+generateCustomerPDF(customer, tx);
+
+                          }}
                           title={`Export ${customer.name} report`}
                           className="px-4 py-2 rounded-xl font-medium transition-all duration-300 hover:scale-105"
                           style={{
@@ -552,7 +549,7 @@ export default function CustomerList({ customers, loading, onRefresh, isDarkMode
                         </div>
 
                         <div className="space-y-3">
-                          {generateMockTransactions(customer).map((transaction, index) => (
+                          {(transactionsCache[customer.id] || []).map((transaction, index) => (
                             <div
                               key={index}
                               className="flex items-center justify-between p-4 rounded-lg"
