@@ -26,6 +26,7 @@ import {
   EyeOff,
   UserPlus,
   Sun, Moon,
+  Crown,
 } from 'lucide-react';
 import FileUpload from './FileUpload';
 import CustomerList from './CustomerList';
@@ -340,43 +341,18 @@ export default function Dashboard() {
           )}
         </div>
 
-        <div className="relative z-10">
-          <div className="flex items-start justify-between mb-6">
-            <div
-              className="p-3 rounded-xl"
-              style={{
-                backgroundColor: iconBg || `${color}20`,
-                border: `1px solid ${color}30`,
-              }}
-            >
-              <Icon className="w-6 h-6" style={{ color }} />
-            </div>
-
-            {trend && trendValue && (
-              <div className={`flex items-center px-3 py-1.5 rounded-full ${trend === 'up' ? 'bg-emerald-100 text-emerald-800' :
-                trend === 'down' ? 'bg-red-100 text-red-800' :
-                  'bg-gray-200 text-gray-800'
-                }`}>
-                {trend === 'up' ? <TrendingUpIcon className="w-4 h-4 mr-1" /> :
-                  trend === 'down' ? <TrendingUpIcon className="w-4 h-4 mr-1 rotate-180" /> : null}
-                <span className="text-sm font-semibold">{trendValue}</span>
-              </div>
-            )}
-          </div>
-
-          <div>
-            <p className="text-3xl font-bold mb-2" style={{ color: THEME.text }}>
-              {value}
+        <div>
+          <p className="text-3xl font-bold mb-2" style={{ color: THEME.text }}>
+            {value}
+          </p>
+          <p className="text-base font-semibold mb-1" style={{ color: THEME.text }}>
+            {title}
+          </p>
+          {subtitle && (
+            <p className="text-sm" style={{ color: THEME.muted }}>
+              {subtitle}
             </p>
-            <p className="text-base font-semibold mb-1" style={{ color: THEME.text }}>
-              {title}
-            </p>
-            {subtitle && (
-              <p className="text-sm" style={{ color: THEME.muted }}>
-                {subtitle}
-              </p>
-            )}
-          </div>
+          )}
         </div>
       </div>
     </div>
@@ -570,7 +546,7 @@ export default function Dashboard() {
                     background: `linear-gradient(135deg, ${COLORS.primary}, ${COLORS.secondary})`,
                   }}
                 >
-                  <Activity className="w-5 h-5 text-white" />
+                  <Crown className="w-5 h-5 text-white" />
                 </div>
 
                 <div>
@@ -809,7 +785,7 @@ export default function Dashboard() {
                     className="p-2 rounded-lg"
                     style={{ backgroundColor: `${COLORS.primary}15` }}
                   >
-                    <Activity className="w-5 h-5" style={{ color: COLORS.primary }} />
+                    <Crown className="w-5 h-5" style={{ color: COLORS.primary }} />
                   </div>
                   <div>
                     <h3 className="font-semibold" style={{ color: COLORS.primary }}>Dashboard</h3>
