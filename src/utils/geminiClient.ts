@@ -86,20 +86,18 @@ export async function sendToGemini(
     return null;
   }
 
-  // Target the Flash model for speed
+  // --- MODEL CONFIGURATION ---
+  // Strictly using 2.5-flash as requested
   const model = "gemini-1.5-flash";
   const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
-  // 2. COMBINE CONTEXT + USER PROMPT
-  // We combine the static App Context, any dynamic data (like current customer), and the user's question.
-  const fullPrompt = `
-    ${APP_CONTEXT}
-    
-    ${dynamicContext ? `--- CURRENT PAGE DATA ---\n${dynamicContext}\n` : ''}
+  // 2. PROMPT CONSTRUCTION
+  // We clean up whitespace to ensure the AI receives a high-quality prompt block.
+  const contextSection = dynamicContext
+    ? `\n--- CURRENT PAGE DATA ---\n${dynamicContext}`
+    : '';
 
-    --- USER QUESTION ---
-    ${prompt}
-  `;
+  const fullPrompt = `${APP_CONTEXT}${contextSection}\n\n--- USER QUESTION ---\n${prompt}`;
 
   try {
     const res = await fetch(endpoint, {
@@ -113,15 +111,15 @@ export async function sendToGemini(
         }],
         generationConfig: {
           maxOutputTokens: 1000,
-          temperature: 0.7 // Slightly creative but focused
+          temperature: 0.7
         }
       })
     });
 
     if (!res.ok) {
       const errorData = await res.json();
-      console.error("Gemini API Error:", errorData);
-      return null;
+      console.error("Gemini API Error:", JSON.stringify(errorData, null, 2));
+      return `API Error: ${errorData.error?.message || "Unknown error"}`;
     }
 
     const data = await res.json();
