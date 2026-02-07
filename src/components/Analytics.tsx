@@ -1,5 +1,6 @@
 import { Customer } from '../lib/supabase';
 import { TrendingUp, Users, AlertCircle, Calendar, BarChart3, Target } from 'lucide-react';
+import { BarChart, Bar, PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 const COLORS = {
   primary: '#1b4079',
@@ -156,10 +157,37 @@ export default function Analytics({ customers, isDarkMode = false }: AnalyticsPr
             boxShadow: `0 8px 32px ${COLORS.primary}10`,
           }}
         >
-          <h3 className="text-lg font-bold mb-4 flex items-center space-x-2" style={{ color: COLORS.primary }}>
+          <h3 className="text-lg font-bold mb-6 flex items-center space-x-2" style={{ color: COLORS.primary }}>
             <BarChart3 className="w-5 h-5" style={{ color: COLORS.primary }} />
             <span>Risk Distribution</span>
           </h3>
+          
+          {/* Pie Chart */}
+          {customers.length > 0 ? (
+            <div className="mb-6">
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={riskDistribution}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ label, percentage }) => `${label} ${percentage.toFixed(0)}%`}
+                    outerRadius={100}
+                    fill="#8884d8"
+                    dataKey="count"
+                  >
+                    <Cell fill={COLORS.danger} />
+                    <Cell fill={COLORS.warning} />
+                    <Cell fill={COLORS.success} />
+                  </Pie>
+                  <Tooltip formatter={(value) => `${value} customers`} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          ) : null}
+
+          {/* Data Table */}
           <div className="space-y-4">
             {riskDistribution.map((risk, index) => {
               let barColor = COLORS.danger;
@@ -194,10 +222,34 @@ export default function Analytics({ customers, isDarkMode = false }: AnalyticsPr
             boxShadow: `0 8px 32px ${COLORS.primary}10`,
           }}
         >
-          <h3 className="text-lg font-bold mb-4 flex items-center space-x-2" style={{ color: COLORS.primary }}>
+          <h3 className="text-lg font-bold mb-6 flex items-center space-x-2" style={{ color: COLORS.primary }}>
             <Calendar className="w-5 h-5" style={{ color: COLORS.warning }} />
             <span>Overdue Distribution</span>
           </h3>
+          
+          {/* Bar Chart */}
+          {customers.length > 0 ? (
+            <div className="mb-6">
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={overdueRanges}>
+                  <CartesianGrid strokeDasharray="3 3" stroke={`${COLORS.primary}20`} />
+                  <XAxis dataKey="label" stroke={`${COLORS.primary}60`} />
+                  <YAxis stroke={`${COLORS.primary}60`} />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: isDarkMode ? COLORS.dark : 'white',
+                      border: `1px solid ${COLORS.primary}30`,
+                      borderRadius: '8px'
+                    }}
+                    formatter={(value) => [`${value} customers`, 'Count']}
+                  />
+                  <Bar dataKey="count" fill={COLORS.primary} radius={[8, 8, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          ) : null}
+
+          {/* Data Table */}
           <div className="space-y-3">
             {overdueRanges.map((range, index) => (
               <div
@@ -224,10 +276,34 @@ export default function Analytics({ customers, isDarkMode = false }: AnalyticsPr
           boxShadow: `0 8px 32px ${COLORS.primary}10`,
         }}
       >
-        <h3 className="text-lg font-bold mb-4 flex items-center space-x-2" style={{ color: COLORS.primary }}>
+        <h3 className="text-lg font-bold mb-6 flex items-center space-x-2" style={{ color: COLORS.primary }}>
           <Target className="w-5 h-5" style={{ color: COLORS.success }} />
           <span>Outstanding Amount Distribution</span>
         </h3>
+        
+        {/* Bar Chart */}
+        {customers.length > 0 ? (
+          <div className="mb-6">
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={amountRanges}>
+                <CartesianGrid strokeDasharray="3 3" stroke={`${COLORS.primary}20`} />
+                <XAxis dataKey="label" stroke={`${COLORS.primary}60`} angle={-45} textAnchor="end" height={80} />
+                <YAxis stroke={`${COLORS.primary}60`} />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: isDarkMode ? COLORS.dark : 'white',
+                    border: `1px solid ${COLORS.primary}30`,
+                    borderRadius: '8px'
+                  }}
+                  formatter={(value) => [`${value} customers`, 'Count']}
+                />
+                <Bar dataKey="count" fill={COLORS.success} radius={[8, 8, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        ) : null}
+
+        {/* Data Grid */}
         <div className="grid md:grid-cols-4 gap-4">
           {amountRanges.map((range, index) => (
             <div
@@ -253,10 +329,41 @@ export default function Analytics({ customers, isDarkMode = false }: AnalyticsPr
           boxShadow: `0 8px 32px ${COLORS.primary}10`,
         }}
       >
-        <h3 className="text-lg font-bold mb-4 flex items-center space-x-2" style={{ color: COLORS.primary }}>
+        <h3 className="text-lg font-bold mb-6 flex items-center space-x-2" style={{ color: COLORS.primary }}>
           <TrendingUp className="w-5 h-5" style={{ color: COLORS.danger }} />
-          <span>Top 5 Priority Accounts</span>
+          <span>Top Priority Accounts - Outstanding Trend</span>
         </h3>
+        
+        {/* Line Chart */}
+        {topCustomers.length > 0 ? (
+          <div className="mb-6">
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart
+                data={topCustomers.map((customer, index) => ({
+                  name: customer.name.substring(0, 10),
+                  outstanding: Number(customer.outstanding_amount),
+                  fullName: customer.name,
+                }))}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke={`${COLORS.primary}20`} />
+                <XAxis dataKey="name" stroke={`${COLORS.primary}60`} />
+                <YAxis stroke={`${COLORS.primary}60`} />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: isDarkMode ? COLORS.dark : 'white',
+                    border: `1px solid ${COLORS.primary}30`,
+                    borderRadius: '8px'
+                  }}
+                  formatter={(value) => [`₹${value.toLocaleString()}`, 'Outstanding']}
+                  labelFormatter={(label) => `Amount`}
+                />
+                <Bar dataKey="outstanding" fill={COLORS.danger} radius={[8, 8, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        ) : null}
+
+        {/* Data List */}
         <div className="space-y-3">
           {topCustomers.map((customer, index) => (
             <div
