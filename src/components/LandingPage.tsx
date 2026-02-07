@@ -432,7 +432,7 @@ export default function LandingPage({ onGetStarted = () => {} }: LandingPageProp
                   boxShadow: `0 10px 30px ${COLORS.primary}40`
                 }}
               >
-                <span>Start Your Free Trial</span>
+                <span>Get Started</span>
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
               </button>
               
@@ -645,8 +645,7 @@ export default function LandingPage({ onGetStarted = () => {} }: LandingPageProp
                     className="mt-6 flex items-center text-sm font-semibold transition-all duration-300 group-hover:translate-x-2"
                     style={{ color: feature.color }}
                   >
-                    <span>Learn more</span>
-                    <ChevronRight className="w-4 h-4 ml-2" />
+                    
                   </div>
                 </div>
               </div>
@@ -820,7 +819,7 @@ export default function LandingPage({ onGetStarted = () => {} }: LandingPageProp
                 boxShadow: `0 10px 40px ${COLORS.gold}40`
               }}
             >
-              <span>Start Your Free Trial</span>
+              <span>Get Started</span>
               <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
             </button>
             
