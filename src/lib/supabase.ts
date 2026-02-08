@@ -26,4 +26,8 @@ export interface Customer {
   status: string;
   created_at: string;
   updated_at: string;
+  cibil_score?: number;
+  salary?: number;
+  job_profile?: string;
+  gender?: string;
 }

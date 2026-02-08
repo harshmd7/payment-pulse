@@ -414,11 +414,7 @@ export default function CustomerAnalysis({ customer, onClose, inline = false }: 
                 <p className="text-3xl font-bold" style={{ color: getRiskColor(currentScore) }}>
                   {currentScore}
                 </p>
-                {(currentScore !== customer.risk_score) && (
-                  <p className="text-xs mt-1" style={{ color: COLORS.accent2 }}>
-                    (Calculated: {customer.risk_score} → {Math.round(currentScore)})
-                  </p>
-                )}
+
               </div>
               <div className="text-center p-3 rounded-lg" style={{ backgroundColor: 'white' }}>
                 <p className="text-sm mb-1" style={{ color: COLORS.secondary }}>Outstanding</p>

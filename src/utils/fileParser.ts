@@ -9,6 +9,10 @@ export interface ParsedTransaction {
     days_overdue: number;
     transaction_date?: string;
     description?: string;
+    cibil_score?: number;
+    salary?: number;
+    job_profile?: string;
+    gender?: string;
 }
 
 /**
@@ -40,6 +44,10 @@ export async function parseCSV(file: File): Promise<ParsedTransaction[]> {
             if (header.includes('date')) transaction.transaction_date = value;
             if (header.includes('description') || header.includes('desc'))
                 transaction.description = value;
+            if (header.includes('cibil')) transaction.cibil_score = parseInt(value) || 0;
+            if (header.includes('salary') || header.includes('income')) transaction.salary = parseFloat(value) || 0;
+            if (header.includes('job') || header.includes('profile') || header.includes('designation')) transaction.job_profile = value;
+            if (header.includes('gender') || header.includes('sex')) transaction.gender = value;
         });
 
         if (!transaction.name) transaction.name = `Customer ${i}`;
@@ -91,6 +99,12 @@ export async function parseExcel(file: File): Promise<ParsedTransaction[]> {
                     // Description
                     const description = row['Description'] || row['Narration'] || row['Remarks'] || null;
 
+                    // New Attributes
+                    const cibil = row['CIBIL'] || row['Cibil Score'] || row['Score'] || 0;
+                    const salary = row['Salary'] || row['Income'] || row['CTC'] || 0;
+                    const job = row['Job Profile'] || row['Designation'] || row['Role'] || row['Job'] || null;
+                    const gender = row['Gender'] || row['Sex'] || null;
+
                     return {
                         name,
                         email,
@@ -100,6 +114,10 @@ export async function parseExcel(file: File): Promise<ParsedTransaction[]> {
                         days_overdue: parseInt(String(daysOverdue)) || 0,
                         transaction_date: transactionDate,
                         description,
+                        cibil_score: parseInt(String(cibil)) || undefined,
+                        salary: parseFloat(String(salary)) || undefined,
+                        job_profile: job,
+                        gender: gender,
                     };
                 });
 
@@ -132,6 +150,10 @@ export async function parseJSON(file: File): Promise<ParsedTransaction[]> {
             days_overdue: parseInt(item.days_overdue || item.overdue || 0),
             transaction_date: item.date || item.transaction_date || null,
             description: item.description || item.narration || null,
+            cibil_score: parseInt(item.cibil_score || item.cibil || 0) || undefined,
+            salary: parseFloat(item.salary || item.income || 0) || undefined,
+            job_profile: item.job_profile || item.job || item.designation || null,
+            gender: item.gender || item.sex || null,
         }));
     }
 
@@ -146,6 +168,10 @@ export async function parseJSON(file: File): Promise<ParsedTransaction[]> {
             days_overdue: parseInt(data.days_overdue || data.overdue || 0),
             transaction_date: data.date || data.transaction_date || null,
             description: data.description || data.narration || null,
+            cibil_score: parseInt(data.cibil_score || data.cibil || 0) || undefined,
+            salary: parseFloat(data.salary || data.income || 0) || undefined,
+            job_profile: data.job_profile || data.job || data.designation || null,
+            gender: data.gender || data.sex || null,
         }];
     }
 

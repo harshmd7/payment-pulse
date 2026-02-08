@@ -119,14 +119,28 @@ export function calculateAdvancedRiskScore(factors: RiskScoreFactors): number {
   const recencyScore = calculateRecencyScore(lastPaymentDaysAgo);
 
   // Weighted combination
+  // Weighted combination
   const finalScore =
     daysOvrdueScore * 0.4 +      // 40% weight
     amountSeverityScore * 0.3 +  // 30% weight
     behaviorScore * 0.2 +        // 20% weight
     recencyScore * 0.1;          // 10% weight
 
+  let calculatedFinalScore = Math.round(finalScore);
+
+  // CRITICAL OVERRIDE:
+  // If the outstanding amount is significant (> 5 Lakhs) and overdue > 45 days, 
+  // it is automatically HIGH RISK regardless of other factors.
+  if (outstandingAmount > 500000 && daysOverdue > 45) {
+    calculatedFinalScore = Math.max(calculatedFinalScore, 85);
+  }
+  // If amount > 1 Lakh and overdue > 60 days
+  else if (outstandingAmount > 100000 && daysOverdue > 60) {
+    calculatedFinalScore = Math.max(calculatedFinalScore, 75);
+  }
+
   // Normalize to 0-100 range
-  return Math.min(100, Math.max(0, Math.round(finalScore)));
+  return Math.min(100, Math.max(0, calculatedFinalScore));
 }
 
 /**
@@ -135,11 +149,11 @@ export function calculateAdvancedRiskScore(factors: RiskScoreFactors): number {
  */
 function calculateDaysOverdueScore(daysOverdue: number): number {
   if (daysOverdue <= 0) return 0;
-  if (daysOverdue <= 7) return 10;
-  if (daysOverdue <= 30) return 20 + (daysOverdue - 7) * 0.3; // Gradual increase
-  if (daysOverdue <= 60) return 35 + (daysOverdue - 30) * 0.6; // Faster increase
-  if (daysOverdue <= 90) return 55 + (daysOverdue - 60) * 0.5; // Continued increase
-  
+  if (daysOverdue <= 7) return 15; // Increased base penalty
+  if (daysOverdue <= 30) return 25 + (daysOverdue - 7) * 0.5; // Steeper
+  if (daysOverdue <= 60) return 40 + (daysOverdue - 30) * 0.8; // Much steeper (60 days -> 64 pts)
+  if (daysOverdue <= 90) return 65 + (daysOverdue - 60) * 0.5; // (90 days -> 80 pts)
+
   // Beyond 90 days: hard cap at 70, indicating critical risk
   return Math.min(70, 70 + (daysOverdue - 90) * 0.2);
 }
@@ -156,11 +170,11 @@ function calculateAmountSeverityScore(
 ): number {
   // If no historical data, use absolute thresholds
   if (isFirstDefault || totalPaid === 0) {
-    if (outstandingAmount < 1000) return 10;
-    if (outstandingAmount < 5000) return 25;
-    if (outstandingAmount < 10000) return 40;
-    if (outstandingAmount < 50000) return 65;
-    return 90; // Very high amount
+    if (outstandingAmount < 10000) return 15;
+    if (outstandingAmount < 50000) return 30;
+    if (outstandingAmount < 200000) return 50;
+    if (outstandingAmount < 1000000) return 75; // 10 Lakhs
+    return 95; // Very high amount (>10 Lakhs)
   }
 
   // If has history, use ratio to average payment

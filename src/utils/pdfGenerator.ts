@@ -1,18 +1,12 @@
 import { Customer } from '../lib/supabase';
 import { Transaction, generateUpcomingPayments, generateMockTransactions } from './transactionUtils';
 
+// ... imports ...
+
 export async function generateCustomerPDF(customer: Customer, paymentHistory?: Transaction[], upcomingPayments?: { dueDate: string; amount: number }[]): Promise<void> {
-  // Use provided payment history (from UI) if available to ensure consistency,
-  // otherwise generate mock history.
   const history = paymentHistory && paymentHistory.length > 0 ? paymentHistory : generateMockTransactions(customer);
-
-  // Use provided upcoming payments or generate defaults
   const upcoming = upcomingPayments && upcomingPayments.length > 0 ? upcomingPayments : generateUpcomingPayments(customer);
-
-  // Create PDF
   const pdfContent = await createPDFDocument(customer, history, upcoming);
-
-  // Download the PDF
   downloadPDF(pdfContent, `${customer.name.replace(/\s+/g, '_')}_Report.pdf`);
 }
 
@@ -21,13 +15,17 @@ async function createPDFDocument(
   paymentHistory: Transaction[],
   upcomingPayments: { dueDate: string; amount: number }[]
 ): Promise<Blob> {
-  // Use modern browser PDF generation
   const { jsPDF } = await import('jspdf');
   const doc = new jsPDF();
 
   // Colors
-  const primaryColor = [27, 64, 121]; // #1b4079
-  const secondaryColor = [77, 124, 138]; // #4d7c8a
+  const primaryColor: [number, number, number] = [27, 64, 121]; // #1b4079
+  const secondaryColor: [number, number, number] = [77, 124, 138]; // #4d7c8a
+
+  // Calculate Recovery Metrics
+  const totalPaid = paymentHistory.reduce((sum, t) => t.status === 'Paid' ? sum + t.amount : sum, 0);
+  const totalDebt = totalPaid + Number(customer.outstanding_amount);
+  const recoveryRate = totalDebt > 0 ? ((totalPaid / totalDebt) * 100).toFixed(1) + '%' : '0%';
 
   // Title
   doc.setFillColor(...primaryColor);
@@ -42,19 +40,27 @@ async function createPDFDocument(
   doc.setTextColor(0, 0, 0);
   doc.setFontSize(16);
   doc.text('Customer Information', 20, 55);
-  
+
   doc.setFontSize(11);
   doc.text(`Name: ${customer.name}`, 20, 65);
   if (customer.email) doc.text(`Email: ${customer.email}`, 20, 72);
   if (customer.phone) doc.text(`Phone: ${customer.phone}`, 20, 79);
-  doc.text(`Outstanding Amount: ₹${Number(customer.outstanding_amount).toLocaleString()}`, 20, 86);
+  doc.text(`Outstanding Amount: Rs. ${Number(customer.outstanding_amount).toLocaleString()}`, 20, 86);
   doc.text(`Days Overdue: ${customer.days_overdue}`, 20, 93);
   doc.text(`Risk Score: ${customer.risk_score}`, 20, 100);
+
+  // Added Recovery Rate
+  doc.setFontSize(12);
+  doc.setTextColor(totalPaid > 0 ? 16 : 220, totalPaid > 0 ? 185 : 50, totalPaid > 0 ? 129 : 50); // Green if paid, else dark red/grey
+  doc.text(`Recovery Rate: ${recoveryRate}`, 120, 86); // Position alongside Outstanding
+  doc.setTextColor(0, 0, 0);
+  doc.setFontSize(11);
+
 
   // Payment History
   doc.setFontSize(16);
   doc.text('Last 3 Months Payment History', 20, 115);
-  
+
   // Table header
   doc.setFillColor(...secondaryColor);
   doc.rect(20, 120, 170, 10, 'F');
@@ -73,8 +79,8 @@ async function createPDFDocument(
       doc.rect(20, yPos - 5, 170, 8, 'F');
     }
     doc.text(payment.date, 25, yPos);
-    doc.text(`₹${payment.amount.toLocaleString()}`, 80, yPos);
-    
+    doc.text(`Rs. ${payment.amount.toLocaleString()}`, 80, yPos);
+
     if (payment.status === 'Paid') {
       doc.setTextColor(16, 185, 129);
     } else {
@@ -82,7 +88,7 @@ async function createPDFDocument(
     }
     doc.text(payment.status, 135, yPos);
     doc.setTextColor(0, 0, 0);
-    
+
     yPos += 10;
   });
 
@@ -90,7 +96,7 @@ async function createPDFDocument(
   yPos += 10;
   doc.setFontSize(16);
   doc.text('Upcoming Payments', 20, yPos);
-  
+
   yPos += 5;
   // Table header
   doc.setFillColor(...secondaryColor);
@@ -109,8 +115,8 @@ async function createPDFDocument(
       doc.rect(20, yPos - 5, 170, 8, 'F');
     }
     doc.text(payment.dueDate, 25, yPos);
-    doc.text(`₹${payment.amount.toLocaleString()}`, 80, yPos);
-    
+    doc.text(`Rs. ${payment.amount.toLocaleString()}`, 80, yPos);
+
     yPos += 10;
   });
 

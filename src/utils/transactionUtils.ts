@@ -10,13 +10,20 @@ export function generateMockTransactions(customer: Customer, months = 3): Transa
   const transactions: Transaction[] = [];
   const today = new Date();
 
+  // Inverse correlation: Lower risk score = Higher implied past payments
+  // Risk 0 (Good) -> Multiplier 2.0 (Paid 2x what is outstanding)
+  // Risk 100 (Bad) -> Multiplier 0.1 (Paid 0.1x what is outstanding)
+  const riskFactor = Math.max(0.1, 2.0 - (customer.risk_score / 100) * 1.9);
+  const baseAmount = Number(customer.outstanding_amount) * riskFactor;
+  const amountPerTx = baseAmount / months;
+
   for (let i = 0; i < months; i++) {
     const date = new Date(today);
     date.setMonth(date.getMonth() - i);
 
     transactions.push({
       date: date.toLocaleDateString('en-IN'),
-      amount: Math.floor(Math.random() * Number(customer.outstanding_amount) * 0.4),
+      amount: Math.max(100, Math.floor(amountPerTx * (0.8 + Math.random() * 0.4))), // Variance +/- 20%
       status: i === 0 ? 'Pending' : 'Paid',
     });
   }
