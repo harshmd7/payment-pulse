@@ -1,7 +1,4 @@
 // Email configuration (using SendGrid or similar)
-const SENDGRID_API_KEY = import.meta.env.VITE_SENDGRID_API_KEY || '';
-const FROM_EMAIL = 'noreply@paymentpulse.com';
-
 interface EmailOptions {
     to: string;
     subject: string;

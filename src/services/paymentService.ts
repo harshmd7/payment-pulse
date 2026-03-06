@@ -184,7 +184,7 @@ export function generatePaymentPlanOptions(amount: number, daysOverdue: number) 
 /**
  * Verify Payment Status (webhook handler)
  */
-export async function verifyPaymentStatus(paymentId: string, signature: string): Promise<boolean> {
+export async function verifyPaymentStatus(_paymentId: string, _signature: string): Promise<boolean> {
     // Implement Razorpay signature verification
     // This ensures the payment notification is genuine
     try {

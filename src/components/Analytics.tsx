@@ -1,7 +1,7 @@
 import { Customer } from '../lib/supabase';
 import { sendEmailReminder } from '../utils/emailService';
 import { TrendingUp, Users, AlertCircle, Calendar, BarChart3, Target } from 'lucide-react';
-import { BarChart, Bar, PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 const COLORS = {
   primary: '#1b4079',
@@ -173,7 +173,7 @@ export default function Analytics({ customers, isDarkMode = false }: AnalyticsPr
                     cx="50%"
                     cy="50%"
                     labelLine={false}
-                    label={({ label, percentage }) => `${label} ${percentage.toFixed(0)}%`}
+                    label={(entry: any) => `${entry.name} ${((entry.value / riskDistribution.reduce((sum, item) => sum + item.count, 0)) * 100).toFixed(0)}%`}
                     outerRadius={100}
                     fill="#8884d8"
                     dataKey="count"
@@ -340,7 +340,7 @@ export default function Analytics({ customers, isDarkMode = false }: AnalyticsPr
           <div className="mb-6">
             <ResponsiveContainer width="100%" height={300}>
               <BarChart
-                data={topCustomers.map((customer, index) => ({
+                data={topCustomers.map((customer) => ({
                   name: customer.name.substring(0, 10),
                   outstanding: Number(customer.outstanding_amount),
                   fullName: customer.name,
@@ -355,8 +355,7 @@ export default function Analytics({ customers, isDarkMode = false }: AnalyticsPr
                     border: `1px solid ${COLORS.primary}30`,
                     borderRadius: '8px'
                   }}
-                  formatter={(value) => [`₹${value.toLocaleString()}`, 'Outstanding']}
-                  labelFormatter={(label) => `Amount`}
+                  formatter={(value) => [`₹${(value || 0).toLocaleString()}`, 'Outstanding']}
                 />
                 <Bar dataKey="outstanding" fill={COLORS.danger} radius={[8, 8, 0, 0]} />
               </BarChart>

@@ -4,7 +4,7 @@ import {
   CheckCircle, MessageSquare, Globe, X, Menu, Sun, Moon,
   Users as UsersIcon, Mail, Phone, MapPin, Github, Twitter, Linkedin,
   Crown, Award, Gem, Castle, Scroll, ShieldCheck, Trophy, Diamond,
-  ChevronRight, DollarSign, Building, BarChart3 as ChartBar, Clock as ClockIcon
+  DollarSign, Building, BarChart3 as ChartBar, Clock as ClockIcon
 } from 'lucide-react';
 import { sendToGemini } from '../utils/geminiClient';
 

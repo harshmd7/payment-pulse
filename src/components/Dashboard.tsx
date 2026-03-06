@@ -20,8 +20,6 @@ import {
   TrendingUp as TrendingUpIcon,
   Activity,
   Target,
-  Download,
-  User,
   Eye,
   EyeOff,
   UserPlus,
@@ -32,7 +30,6 @@ import FileUpload from './FileUpload';
 import CustomerList from './CustomerList';
 import Analytics from './Analytics';
 import AddCustomer from './AddCustomer';
-import { generateCustomerPDF } from '../utils/pdfGenerator';
 import { generateMockTransactions } from '../utils/transactionUtils';
 
 const COLORS = {
@@ -331,18 +328,6 @@ export default function Dashboard() {
         alert.id === id ? { ...alert, unread: false } : alert
       )
     );
-  };
-
-  const handleExportData = async () => {
-    try {
-      for (const customer of customers) {
-        await generateCustomerPDF(customer);
-      }
-      alert(`Exported ${customers.length} customer reports successfully!`);
-    } catch (error) {
-      console.error('Error exporting data:', error);
-      alert('Failed to export data. Please try again.');
-    }
   };
 
   const scrollToSection = (ref: React.RefObject<HTMLDivElement>) => {
