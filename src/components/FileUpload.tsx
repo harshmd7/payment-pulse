@@ -79,6 +79,14 @@ export default function FileUpload({ onUploadComplete, isDarkMode = false }: Fil
       }
 
       const user = (await supabase.auth.getUser()).data.user;
+      if (!user) throw new Error('Not authenticated. Please sign in before uploading data.');
+
+      // Ensure a profile/user row exists for the auth user to satisfy customers.user_id FK
+      // This prevents "customers_user_id_fkey" violations when the auth user exists but
+      // the public profile/user row is missing.
+      // eslint-disable-next-line @typescript-eslint/no-use-before-define
+      const { ensureUserRecordExists } = await import('../utils/supabaseHelpers');
+      await ensureUserRecordExists(user);
 
       // Process each transaction and calculate risk scores
       const customers = parsedTransactions.map((transaction, index) => {

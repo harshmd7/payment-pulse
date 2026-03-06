@@ -5,6 +5,7 @@ import {
   Activity, Sparkles, ShieldCheck, Trophy
 } from 'lucide-react';
 import { calculateAdvancedRiskScore, getRiskScoreExplanation, getRiskCategory } from '../utils/riskScoreCalculator';
+import { sendToOpenAI } from '../utils/openaiClient';
 import PaymentActions from './PaymentActions';
 
 const COLORS = {
@@ -50,6 +51,17 @@ export default function CustomerAnalysis({ customer, onClose, inline = false }: 
       const riskAssessment = generateRiskAssessment(customer);
       const recommendedActions = generateRecommendedActions(customer);
 
+      // Optional: enrich the analysis via OpenAI (uses VITE_OPENAI_API_KEY)
+      let openaiSummary: string | null = null;
+      try {
+        const prompt = `Summarize and expand on this customer analysis. Customer: ${JSON.stringify({ id: customer.id, name: customer.name, days_overdue: customer.days_overdue, outstanding_amount: customer.outstanding_amount })}.\nInsights: ${JSON.stringify(aiInsights)}\nRiskAssessment: ${JSON.stringify(riskAssessment)}\nRecommendedActions: ${JSON.stringify(recommendedActions)}\nProvide: a concise summary, two-sentence rationale, and a one-paragraph outreach script.`;
+        openaiSummary = await sendToOpenAI(prompt, { model: 'gpt-5-nano', max_tokens: 400 });
+      } catch (err) {
+        // Non-fatal: continue with local analysis if OpenAI fails
+        // eslint-disable-next-line no-console
+        console.warn('OpenAI enrichment failed', err);
+      }
+
       // Calculate confidence score based on data completeness and days overdue severity
       const advancedScore = calculateAdvancedRiskScore({
         daysOverdue: customer.days_overdue,
@@ -60,7 +72,7 @@ export default function CustomerAnalysis({ customer, onClose, inline = false }: 
       // Confidence: Higher for extreme scores (very clear), lower for moderate (more uncertain)
       const confidenceScore = Math.abs(advancedScore - 50) >= 20 ? 92 : 85;
 
-      const analysisData = {
+      const baseAnalysisData: any = {
         user_id: (await supabase.auth.getUser()).data.user?.id,
         customer_id: customer.id,
         analysis_type: 'comprehensive_risk_assessment',
@@ -70,15 +82,36 @@ export default function CustomerAnalysis({ customer, onClose, inline = false }: 
         confidence_score: confidenceScore,
       };
 
+      if (openaiSummary) baseAnalysisData.ai_openai_summary = openaiSummary;
+
+      // Try inserting with the OpenAI summary; if the column doesn't exist in the database
+      // (schema cache error), retry without that field so insertion succeeds.
       const { data, error: insertError } = await supabase
         .from('analysis_results')
-        .insert(analysisData)
+        .insert(baseAnalysisData)
         .select()
         .single();
 
-      if (insertError) throw insertError;
+      if (insertError) {
+        const msg = insertError?.message || '';
+        const missingColumnError = msg.includes('ai_openai_summary') || msg.includes('schema cache') || msg.includes('Could not find') || msg.includes('column');
+        if (missingColumnError && baseAnalysisData.ai_openai_summary) {
+          // remove the field and retry
+          delete baseAnalysisData.ai_openai_summary;
+          const { data: data2, error: insertError2 } = await supabase
+            .from('analysis_results')
+            .insert(baseAnalysisData)
+            .select()
+            .single();
 
-      setAnalysis(data);
+          if (insertError2) throw insertError2;
+          setAnalysis(data2);
+        } else {
+          throw insertError;
+        }
+      } else {
+        setAnalysis(data);
+      }
     } catch (err: any) {
       setError(err.message || 'Failed to perform analysis');
     } finally {

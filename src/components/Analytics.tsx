@@ -1,4 +1,5 @@
 import { Customer } from '../lib/supabase';
+import { sendEmailReminder } from '../utils/emailService';
 import { TrendingUp, Users, AlertCircle, Calendar, BarChart3, Target } from 'lucide-react';
 import { BarChart, Bar, PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
@@ -411,6 +412,29 @@ export default function Analytics({ customers, isDarkMode = false }: AnalyticsPr
         <ul className="space-y-2 text-sm" style={{ color: isDarkMode ? '#b8c5d0' : COLORS.secondary }}>
           <li>• Focus agent resources on {highRiskCustomers.length} high-risk accounts for maximum recovery</li>
           <li>• Implement automated reminders for {lowRiskCustomers.length} low-risk customers to reduce operational costs</li>
+          <li>• Implement automated reminders for {lowRiskCustomers.length} low-risk customers to reduce operational costs</li>
+          <li>
+            <button
+              onClick={async () => {
+                try {
+                  // Example: send a test reminder to the first low-risk customer with email
+                  const target = lowRiskCustomers.find(c => c.email) || customers[0];
+                  if (!target || !target.email) return alert('No customer with email found to send reminder');
+
+                  const subject = `Payment Reminder: ₹${Number(target.outstanding_amount).toLocaleString()}`;
+                  const text = `Hi ${target.name},\n\nThis is a friendly reminder that your outstanding balance of ₹${Number(target.outstanding_amount).toLocaleString()} is overdue by ${target.days_overdue} days. Please make a payment or contact us to arrange a plan.\n\nThanks,\nPayments Team`;
+
+                  await sendEmailReminder({ to: target.email, subject, text });
+                  alert('Reminder sent');
+                } catch (err: any) {
+                  alert('Failed to send reminder: ' + (err.message || err));
+                }
+              }}
+              className="ml-2 px-3 py-1 rounded-lg bg-green-500 text-white"
+            >
+              Send Test Email Reminder
+            </button>
+          </li>
           <li>• Expected recovery improvement: 20-30% with AI-driven prioritization</li>
           <li>• Estimated cost reduction: 30-40% through intelligent automation</li>
         </ul>

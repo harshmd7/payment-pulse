@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';
+import { ensureUserRecordExists } from '../utils/supabaseHelpers';
 import { UserPlus, X, Save, AlertCircle, CheckCircle } from 'lucide-react';
 
 const COLORS = {
@@ -98,10 +99,16 @@ export default function AddCustomer({ onCustomerAdded, isDarkMode = false }: Add
       const outstanding = parseFloat(formData.outstanding_amount) || 0;
       const daysOverdue = parseInt(formData.days_overdue) || 0;
 
+      const user = (await supabase.auth.getUser()).data.user;
+      if (!user) throw new Error('Not authenticated. Please sign in before adding customers.');
+
       const riskScore = calculateRiskScore(outstanding, daysOverdue);
 
+      // Ensure the referenced user/profile row exists to satisfy FK constraints
+      await ensureUserRecordExists(user);
+
       const { error: insertError } = await supabase.from('customers').insert({
-        user_id: (await supabase.auth.getUser()).data.user?.id,
+        user_id: user.id,
         name: formData.name.trim(),
         email: formData.email.trim() || null,
         phone: formData.phone.trim() || null,
